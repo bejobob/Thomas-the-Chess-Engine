@@ -1,3 +1,10 @@
+/*
+Next things to do:
+
+figure out how to get more data into legalMoves.java. I think we need the entire board.
+detect checks.
+*/
+
 import chess.legalMoves;
 
 public class Main {
@@ -24,13 +31,14 @@ public class Main {
         long blackKing = 0x1000000000000000L;
         long blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
         
-        long whiteKnightsCopy = whiteKnights;
-        System.out.println("Printing legal moves for white knights from starting position:");
-        while (whiteKnightsCopy != 0) {
-            int square = Long.numberOfTrailingZeros(whiteKnightsCopy);
-            System.out.println("Knight at square: " + square);
-            long moves = legalMoves.knightMoves(square, whitePieces, blackPieces, true);
-            whiteKnightsCopy &= (whiteKnightsCopy - 1);
+        long whitePawnsCopy = whitePawns;
+        System.out.println("Printing legal moves for white pawns from starting position:");
+        while (whitePawnsCopy != 0) {
+            int square = Long.numberOfTrailingZeros(whitePawnsCopy);
+            //System.out.println("Pawn at square: " + square);
+            legalMoves.setOccupied(whitePieces | blackPieces);
+            legalMoves.pawnMoves(square, whitePieces, blackPieces, true);
+            whitePawnsCopy &= (whitePawnsCopy - 1);
         }
         legalMoves.getAlgebraicMoves().forEach(System.out::println);
         legalMoves.getAlgebraicMoves().clear();
