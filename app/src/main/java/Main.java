@@ -1,47 +1,92 @@
 /*
 Next things to do:
 
-figure out how to get more data into legalMoves.java. I think we need the entire board.
 detect checks.
+go from finding all the pseudo-legal moves to only the legal moves.
+    this involves undoing moves. this means I'll need to be able to undo a capture. How to remember what type of piece was captured?
+
 */
 
 import chess.legalMoves;
+import chess.Board;
 
 public class Main {
 
-    public static void main(String[] args) {
-        int BASE_PAWN_VALUE = 1;
-        int BASE_KNIGHT_VALUE = 3;
-        int BASE_BISHOP_VALUE = 3;
-        int BASE_ROOK_VALUE = 5;
-        int BASE_QUEEN_VALUE = 9;
-        long whitePawns = 0x000000000000FF00L;
-        long whiteRooks = 0x0000000000000081L;
-        long whiteKnights = 0x0000000000000042L;
-        long whiteBishops = 0x0000000000000024L;
-        long whiteQueens = 0x0000000000000008L;
-        long whiteKing = 0x0000000000000010L;
-        long whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
+    int BASE_PAWN_VALUE = 1;
+    int BASE_KNIGHT_VALUE = 3;
+    int BASE_BISHOP_VALUE = 3;
+    int BASE_ROOK_VALUE = 5;
+    int BASE_QUEEN_VALUE = 9;
 
-        long blackPawns = 0x00FF000000000000L;
-        long blackRooks = 0x8100000000000000L;
-        long blackKnights = 0x4200000000000000L;
-        long blackBishops = 0x2400000000000000L;
-        long blackQueens = 0x0800000000000000L;
-        long blackKing = 0x1000000000000000L;
-        long blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
-        
-        long whitePawnsCopy = whitePawns;
-        System.out.println("Printing legal moves for white pawns from starting position:");
-        while (whitePawnsCopy != 0) {
-            int square = Long.numberOfTrailingZeros(whitePawnsCopy);
-            //System.out.println("Pawn at square: " + square);
-            legalMoves.setOccupied(whitePieces | blackPieces);
-            legalMoves.pawnMoves(square, whitePieces, blackPieces, true);
-            whitePawnsCopy &= (whitePawnsCopy - 1);
-        }
+    long whitePawns = 0x0000001000000000L; // e5
+    long whiteRooks = 0x0000000001000000L; // a4
+    long whiteKnights = 0x0000000000040000L; // c3
+    long whiteBishops = 0x0000000000004000L; // g2
+    long whiteQueens = 0x0000000008000000L; // d4
+    long whiteKing = 0x0000000010000000L; // e4
+
+    long blackPawns = 0L;
+    long blackRooks = 0L;
+    long blackKnights = 0L;
+    long blackBishops = 0L;
+    long blackQueens = 0L;
+    long blackKing = 0x8000000000000000L; // h8
+    //long whitePawns = 0x000000000000FF00L; // starting position
+    //long whiteRooks = 0x0000000000000081L; // starting position
+    //long whiteKnights = 0x0000000000000042L; // starting position
+    //long whiteBishops = 0x0000000000000024L; // starting position
+    //long whiteQueens = 0x0000000000000008L; // starting position
+    //long whiteKing = 0x0000000000000010L; // starting position
+    long whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
+
+    //long blackPawns = 0x00FF000000000000L; // starting position
+    //long blackRooks = 0x8100000000000000L; // starting position
+    //long blackKnights = 0x4200000000000000L; // starting position
+    //long blackBishops = 0x2400000000000000L; // starting position
+    //long blackQueens = 0x0800000000000000L; // starting position
+    //long blackKing = 0x1000000000000000L; // starting position
+    long blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
+    long whitePawnsCopy = whitePawns;
+    long blackPawnsCopy = blackPawns;
+    long whiteRooksCopy = whiteRooks;
+    long blackRooksCopy = blackRooks;
+    long whiteKnightsCopy = whiteKnights;
+    long blackKnightsCopy = blackKnights;
+    long whiteBishopsCopy = whiteBishops;
+    long blackBishopsCopy = blackBishops;
+    long whiteQueensCopy = whiteQueens;
+    long blackQueensCopy = blackQueens;
+    long whiteKingCopy = whiteKing;
+    long blackKingCopy = blackKing;
+    long[] whitePiecesCopy = {whitePawnsCopy, whiteRooksCopy, whiteKnightsCopy, whiteBishopsCopy, whiteQueensCopy, whiteKingCopy};
+    long [] blackPiecesCopy = {blackPawnsCopy, blackRooksCopy, blackKnightsCopy, blackBishopsCopy, blackQueensCopy, blackKingCopy};
+
+    Board board = new Board(whitePawns, whiteRooks, whiteKnights, whiteBishops, whiteQueens, whiteKing,
+            blackPawns, blackRooks, blackKnights, blackBishops, blackQueens, blackKing);
+
+    public static void main(String[] args) {
+        Main app = new Main();
+        app.run();
+    }
+
+    public void run() {
+        whiteMoves();
         legalMoves.getAlgebraicMoves().forEach(System.out::println);
         legalMoves.getAlgebraicMoves().clear();
-        
+    }
+    
+    public long whiteMoves(){
+        legalMoves.loadData(board);
+        long legalMovesBitBoard = 0L;
+        for (long group : whitePiecesCopy) {
+            //System.out.printf("%016X%n", group);
+            while (group != 0) {
+                int square = Long.numberOfTrailingZeros(group);
+                //System.out.println(square);
+                legalMovesBitBoard |= legalMoves.allLegalMovesBitBoard(square, whitePieces, blackPieces, true);
+                group &= (group -1);
+            }
+        }
+        return legalMovesBitBoard;
     }
 }
