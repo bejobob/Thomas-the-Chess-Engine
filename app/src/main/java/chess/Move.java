@@ -37,7 +37,5 @@ public class Move {
         this.captureOn = captureOn;
         this.captureType = captureType;
         this.promotion = promotion;
-    }
-
-    
+    }   
 }

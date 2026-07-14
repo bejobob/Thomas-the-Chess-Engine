@@ -33,5 +33,52 @@ public class Board {
         this.whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
         this.blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
     }
-    
+
+    public Long getBitboard(String pieceType, boolean white){
+        if (pieceType.equals("P")){
+            return white? whitePawns : blackPawns;
+        } else if (pieceType.equals("N")){
+            return white? whiteKnights : blackKnights;
+        } else if (pieceType.equals("B")){
+            return white? whiteBishops : blackBishops;
+        } else if (pieceType.equals("R")){
+            return white? whiteRooks : blackRooks;
+        } else if (pieceType.equals("Q")){
+            return white? whiteQueens : blackQueens;
+        } else {
+            return white? whiteKing : blackKing;
+        }
+    }
+
+    public void setBitboard(String pieceType, Long val, boolean white){
+        switch (pieceType) {
+            case "pawn":
+                if (white){whitePawns = val;} else {blackPawns = val;}
+                break;
+            case "knight":
+                if (white){whiteKnights = val;} else {blackKnights = val;}
+                break;
+            case "bishop":
+                if (white){whiteBishops = val;} else {blackBishops = val;}
+                break;
+            case "rook":
+                if (white){whiteRooks = val;} else {blackRooks = val;}
+                break;
+            case "queen":
+                if (white){whiteQueens = val;} else {blackQueens = val;}
+                break;
+            case "king":
+                if (white){whiteKing = val;} else {blackKing = val;}
+                break;
+            default:
+                break;
+        }
+        
+        if (white){
+            whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
+        } else {
+            blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
+
+        }
+    }
 }
