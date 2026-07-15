@@ -9,6 +9,8 @@ go from finding all the pseudo-legal moves to only the legal moves.
 
 import chess.legalMoves;
 import chess.Board;
+import java.util.ArrayList;
+import chess.Move;
 
 public class Main {
 
@@ -18,15 +20,15 @@ public class Main {
     int BASE_ROOK_VALUE = 5;
     int BASE_QUEEN_VALUE = 9;
 
-    long whitePawns = 0x0000001000000000L; // e5
-    long whiteRooks = 0x0000000001000000L; // a4
-    long whiteKnights = 0x0000000000040000L; // c3
-    long whiteBishops = 0x0000000000004000L; // g2
-    long whiteQueens = 0x0000000008000000L; // d4
-    long whiteKing = 0x0000000010000000L; // e4
+    long whitePawns = 0x0000000000000000L; // 
+    long whiteRooks = 0x0000000001000000L; // e4
+    long whiteKnights = 0x0000000000000000L; // 
+    long whiteBishops = 0x0000000000000000L; // 
+    long whiteQueens = 0x0000000008000000L; // 
+    long whiteKing = 0x0000000000001000L; // e2
 
     long blackPawns = 0L;
-    long blackRooks = 0L;
+    long blackRooks = 1000000000000000L;
     long blackKnights = 0L;
     long blackBishops = 0L;
     long blackQueens = 0L;
@@ -71,22 +73,27 @@ public class Main {
 
     public void run() {
         whiteMoves();
-        legalMoves.getAlgebraicMoves().forEach(System.out::println);
-        legalMoves.getAlgebraicMoves().clear();
+        
     }
     
-    public long whiteMoves(){
+    public ArrayList<Move> whiteMoves(){
         legalMoves.loadData(board);
-        long legalMovesBitBoard = 0L;
+        ArrayList<Move> legalMovesL = new ArrayList<>();
         for (long group : whitePiecesCopy) {
             //System.out.printf("%016X%n", group);
             while (group != 0) {
                 int square = Long.numberOfTrailingZeros(group);
                 //System.out.println(square);
-                legalMovesBitBoard |= legalMoves.allLegalMovesBitBoard(square, whitePieces, blackPieces, true);
+                legalMovesL = legalMoves.allLegalMoves(square, whitePieces, blackPieces, true);
+                System.out.println(legalMovesL.size());
+                for (Move move : legalMovesL){
+                    System.out.println(move.toAlgebraic(move));
+                }
+                
+            
                 group &= (group -1);
             }
         }
-        return legalMovesBitBoard;
+        return legalMovesL;
     }
 }

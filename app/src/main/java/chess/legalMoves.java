@@ -22,8 +22,8 @@ public class legalMoves {
      * @return boolean, whether the current player is in check or not
      * 
      */
-    public static boolean isInCheck(boolean white){
-        long moves = allPseudoLegalMovesBitBoard(whitePieces, blackPieces, !white);
+    public static boolean isInCheck(boolean white, long otherMoves){
+        long moves = otherMoves;
         long king = white ? whiteKing : blackKing;
         return (king & moves) != 0L;
     }
@@ -46,6 +46,15 @@ public class legalMoves {
     public static boolean isOccupied(int square) {
         return (occupied & (1L << square)) != 0;
     }
+    // STARTING FROM HERE WE ARE GENERATING PSEUDO-LEGAL MOVES. THESE DO NOT REPRESENT THE ACTUAL LEGAL MOVES //
+    /*
+    public static long masterMoves(String pieceType){
+        int[] offsets = Offsets.getOffsets(pieceType);
+        for (int offset : offsets){
+            
+        }
+    }
+        */
     /**
      * 
      * @param square the square the pawn is on
@@ -55,7 +64,6 @@ public class legalMoves {
      * @return a bitboard representing all the legal moves for the pawn on the given square
      */
 
-    // STARTING FROM HERE WE ARE GENERATING PSEUDO-LEGAL MOVES. THESE DO NOT REPRESENT THE ACTUAL LEGAL MOVES //
     public static long pawnMoves(int square, boolean white) {
         long otherPieces = white ? board.blackPieces : board.whitePieces;
         int forward = white ? 8 : -8;
@@ -230,6 +238,7 @@ public class legalMoves {
             } else if ((square & board.whiteKing) != 0){
                 moves |= kingMoves(square, white);
             }
+            pieces &= (pieces -1);
         }
         return moves;
     }
@@ -254,9 +263,10 @@ public class legalMoves {
     }
 
     public static ArrayList<Move> allLegalMoves(int square, long whitePieces, long blackPieces, boolean white){
+        long otherMoves = allPseudoLegalMovesBitBoard(whitePieces, blackPieces, !white);
         for (Move move : PmovesL){
             makeMove(move, white);
-            if (isInCheck(white)){
+            if (isInCheck(white, otherMoves)){
                 unMove(move, white);
             } else {
                 movesL.add(move);

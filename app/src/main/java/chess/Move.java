@@ -37,5 +37,11 @@ public class Move {
         this.captureOn = captureOn;
         this.captureType = captureType;
         this.promotion = promotion;
-    }   
+    }
+    
+    public String toAlgebraic(Move move){
+        char file = (char) ('a' + (move.to % 8));
+        int rank = move.to / 8 + 1;
+        return move.pieceType + file + rank;
+    }
 }
