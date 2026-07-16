@@ -7,13 +7,8 @@ public class legalMoves {
     public static ArrayList<String> algebraicMoves = new ArrayList<>();
     public static ArrayList<Move> PmovesL = new ArrayList<>();
     public static ArrayList<Move> movesL = new ArrayList<>();
-    public static long blackPieces;
-    public static long whitePieces;
-    public static long whiteKing;
-    public static long blackKing;
-    public static Long occupied;
-    public static Board board;
 
+    public static Long occupied;
 
     /**
      * Checks if the current player is in check
@@ -22,19 +17,10 @@ public class legalMoves {
      * @return boolean, whether the current player is in check or not
      * 
      */
-    public static boolean isInCheck(boolean white, long otherMoves){
+    public static boolean isInCheck(boolean white, long otherMoves, Board board){
         long moves = otherMoves;
-        long king = white ? whiteKing : blackKing;
+        long king = white ? board.whiteKing : board.blackKing;
         return (king & moves) != 0L;
-    }
-
-    public static void loadData(Board board) {
-        blackPieces = board.blackPieces;
-        whitePieces = board.whitePieces;
-        whiteKing = board.whiteKing;
-        blackKing = board.blackKing;
-        occupied = blackPieces | whitePieces;
-        legalMoves.board = board;
     }
 
     public static String toAlgebraic(int square) {
@@ -43,8 +29,8 @@ public class legalMoves {
         return "" + file + rank;
     }
 
-    public static boolean isOccupied(int square) {
-        return (occupied & (1L << square)) != 0;
+    public static boolean isOccupied(int square, Board board) {
+        return ((board.whitePieces | board.blackPieces) & (1L << square)) != 0;
     }
     // STARTING FROM HERE WE ARE GENERATING PSEUDO-LEGAL MOVES. THESE DO NOT REPRESENT THE ACTUAL LEGAL MOVES //
     /*
@@ -64,19 +50,19 @@ public class legalMoves {
      * @return a bitboard representing all the legal moves for the pawn on the given square
      */
 
-    public static long pawnMoves(int square, boolean white) {
+    public static long pawnMoves(int square, boolean white, Board board) {
         long otherPieces = white ? board.blackPieces : board.whitePieces;
         int forward = white ? 8 : -8;
         int leftCapture = white ? 7 : -9;
         int rightCapture = white ? 9 : -7;
         long moves = 0L;
 
-        if ((!isOccupied(square+forward)) && (0 <= (square+forward) && (square+forward) < 64)) {
+        if ((!isOccupied(square+forward, board)) && (0 <= (square+forward) && (square+forward) < 64)) {
             moves |= 1L << (square+forward);
             algebraicMoves.add(toAlgebraic(square+forward));
             PmovesL.add(new Move(square, square+forward, "P"));
         }
-        if ((square / 8 == (white ? 1 : 6)) && (!isOccupied(square+forward)) && (!isOccupied(square+2*forward) && (0 <= (square+2*forward) && (square+2*forward) < 64))) {
+        if ((square / 8 == (white ? 1 : 6)) && (!isOccupied(square+forward, board)) && (!isOccupied(square+2*forward, board) && (0 <= (square+2*forward) && (square+2*forward) < 64))) {
             moves |= 1L << (square+2*forward);
             algebraicMoves.add(toAlgebraic(square+2*forward));
             PmovesL.add(new Move(square, square+2*forward, "P"));
@@ -104,7 +90,7 @@ public class legalMoves {
         return moves;
     }
 
-    public static long knightMoves(int square, boolean white) {
+    public static long knightMoves(int square, boolean white, Board board) {
         long otherPieces = white ? board.blackPieces : board.whitePieces;
         long moves = 0L;
         int[] knightOffsets = {17, 10, -6, -15, -17, -10, 6, 15};
@@ -118,7 +104,7 @@ public class legalMoves {
                 continue; // this avoids having the knight jump up a row
             }
             
-            if (isOccupied(square+offset)) { // if there is a piece on the target square
+            if (isOccupied(square+offset, board)) { // if there is a piece on the target square
                 
                 if ((otherPieces & (1L << (square + offset))) == 0L) { // if it is a friendly piece
                     continue;
@@ -136,18 +122,27 @@ public class legalMoves {
             return moves;
     }
 
-    public static long rookMoves(int square, boolean white, String letter){
+    public static long rookMoves(int square, boolean white, String letter, Board board){
+         
+        
+
         long otherPieces = white ? board.blackPieces : board.whitePieces;
         long moves = 0L;
         int[] directions = {8, -8, 1, -1};
+        
         for (int direction : directions) {
+            System.out.println("Starting square: " + square + " (" + toAlgebraic(square) + ")");
+            System.out.println("Direction: " + direction); 
             int currentSquare = square;
+            System.out.println(    "currentSquare = " + currentSquare +    " (" + toAlgebraic(currentSquare) + ")");
+
             while ((currentSquare + direction) >= 0 && (currentSquare + direction) < 64) {
                 if (Math.abs((currentSquare % 8) - ((currentSquare + direction) % 8)) > 1){
                     break;
                 }
 
                 currentSquare += direction;
+                //System.out.println(currentSquare - square);
 
                 if ((otherPieces & (1L << currentSquare)) != 0L) {
                     moves |= 1L << currentSquare;
@@ -155,7 +150,14 @@ public class legalMoves {
                     PmovesL.add(new Move(square, currentSquare, letter));
                     break;
                 }
-                if (!isOccupied(currentSquare)) {
+                System.out.println("Checking: " + toAlgebraic(currentSquare));
+                System.out.printf("whitePieces = %016X%n", board.whitePieces);
+                System.out.printf("blackPieces = %016X%n", board.blackPieces);
+                System.out.println("Occupied? " + isOccupied(currentSquare, board));
+                if (!isOccupied(currentSquare, board)) {
+                    //System.out.println("marker");
+                    //System.out.println(Long.toHexString(1L << currentSquare));
+                    //System.out.println(Long.toHexString(board.whiteKing));
                     moves |= 1L << currentSquare;
                     algebraicMoves.add(letter + toAlgebraic(currentSquare));
                     PmovesL.add(new Move(square, currentSquare, letter));
@@ -167,7 +169,7 @@ public class legalMoves {
         return moves;
     }
 
-    public static long bishopMoves(int square, boolean white, String letter){
+    public static long bishopMoves(int square, boolean white, String letter, Board board){
         long otherPieces = white ? board.blackPieces : board.whitePieces;
         long moves = 0L;
         int[] directions = {9, 7, -9, -7};
@@ -184,7 +186,7 @@ public class legalMoves {
                     PmovesL.add(new Move(square, currentSquare, letter));
                     break;
                 }
-                if (!isOccupied(currentSquare)) {
+                if (!isOccupied(currentSquare, board)) {
                     moves |= 1L << currentSquare;
                     algebraicMoves.add(letter + toAlgebraic(currentSquare));
                     PmovesL.add(new Move(square, currentSquare, letter));
@@ -196,17 +198,17 @@ public class legalMoves {
         return moves;
     }
 
-    public static long queenMoves(int square, boolean white){
-        return rookMoves(square, white, "Q") | bishopMoves(square, white, "Q");
+    public static long queenMoves(int square, boolean white, Board board){
+        return rookMoves(square, white, "Q", board) | bishopMoves(square, white, "Q", board);
     }
 
-    public static long kingMoves(int square, boolean white){
+    public static long kingMoves(int square, boolean white, Board board){
         long otherPieces = white ? board.blackPieces : board.whitePieces;
         long moves = 0L;
         int[] directions = {8, 1, -1, -8, 9, 7, -7, -9};
         for (int direction : directions) {
             if (0<= (square + direction) && (square + direction) < 64) {
-                if (!isOccupied(square+direction) || (otherPieces & (1L << (square + direction))) != 0L) {
+                if (!isOccupied(square+direction, board) || (otherPieces & (1L << (square + direction))) != 0L) {
                     moves |= 1L << (square + direction);
                     algebraicMoves.add("K" + toAlgebraic(square + direction));
                     PmovesL.add(new Move(square, square+direction, "K"));
@@ -218,32 +220,37 @@ public class legalMoves {
 
     // END OF THE GENERATION OF PSEUDO-LEGAL MOVES //
 
-    public static long allPseudoLegalMovesBitBoard(long whitePieces, long blackPieces, boolean white) {
+    public static long allPseudoLegalMovesBitBoard(long whitePieces, long blackPieces, boolean white, Board board) {
         movesL.clear();
         long pieces = white? whitePieces : blackPieces;
         int square = 0;
         long moves = 0L;
         while (pieces != 0L) {
+            //System.out.println(Long.toHexString(pieces));
+            //System.out.println(Long.toHexString(board.whiteKing));
+            //System.out.println("test");
             square = Long.numberOfTrailingZeros(pieces);
-            if ((square & board.whitePawns) != 0){
-                moves |= pawnMoves(square, white);
-            } else if ((square & board.whiteKnights) != 0){
-                moves |= knightMoves(square, white);
-            } else if ((square & board.whiteRooks) != 0){
-                moves |= rookMoves(square, white, "R");
-            } else if ((square & board.whiteBishops) != 0){
-                moves |= bishopMoves(square, white, "B");
-            } else if ((square & board.whiteQueens) != 0){
-                moves |= queenMoves(square, white);
-            } else if ((square & board.whiteKing) != 0){
-                moves |= kingMoves(square, white);
+            //System.out.println(square);
+            if ((pieces & board.getBitboard("P", white)) != 0){
+                moves |= pawnMoves(square, white, board);
+            } else if ((pieces & board.getBitboard("N", white)) != 0){
+                moves |= knightMoves(square, white, board);
+            } else if ((pieces & board.getBitboard("R", white)) != 0){
+                moves |= rookMoves(square, white, "R", board);
+            } else if ((pieces & board.getBitboard("B", white)) != 0){
+                moves |= bishopMoves(square, white, "B", board);
+            } else if ((pieces & board.getBitboard("Q", white)) != 0){
+                moves |= queenMoves(square, white, board);
+            } else if ((pieces & board.getBitboard("K", white)) != 0){
+                moves |= kingMoves(square, white, board);
             }
             pieces &= (pieces -1);
+            System.out.println(Long.toHexString(pieces));
         }
         return moves;
     }
 
-    public static void makeMove(Move move, boolean white){
+    public static void makeMove(Move move, boolean white, Board board){
         long specificPieces = board.getBitboard(move.pieceType, white);
         specificPieces &= ~(1L << move.from);
         specificPieces |= 1L << move.to;
@@ -254,7 +261,7 @@ public class legalMoves {
      * @param move the move that must be undone
      * @param white whether it is white's turn or not
      */
-    public static void unMove(Move move, boolean white){
+    public static void unMove(Move move, boolean white, Board board){
         long specificPieces = board.getBitboard(move.pieceType, white);
         specificPieces &= ~(1L << move.to);
         specificPieces |= 1L << move.from;
@@ -262,12 +269,12 @@ public class legalMoves {
         board.setBitboard(move.pieceType, specificPieces, white);
     }
 
-    public static ArrayList<Move> allLegalMoves(int square, long whitePieces, long blackPieces, boolean white){
-        long otherMoves = allPseudoLegalMovesBitBoard(whitePieces, blackPieces, !white);
+    public static ArrayList<Move> allLegalMoves(long whitePieces, long blackPieces, boolean white, Board board){
+        long otherMoves = allPseudoLegalMovesBitBoard(whitePieces, blackPieces, white, board);
         for (Move move : PmovesL){
-            makeMove(move, white);
-            if (isInCheck(white, otherMoves)){
-                unMove(move, white);
+            makeMove(move, white, board);
+            if (isInCheck(white, otherMoves, board)){
+                unMove(move, white, board);
             } else {
                 movesL.add(move);
             }
@@ -275,9 +282,9 @@ public class legalMoves {
         return movesL;
     }
 
-    public static ArrayList<String> allLegalMovesAlgebraic(int square, long whitePieces, long blackPieces, boolean white) {
+    public static ArrayList<String> allLegalMovesAlgebraic(int square, long whitePieces, long blackPieces, boolean white, Board board) {
         algebraicMoves.clear();
-        allPseudoLegalMovesBitBoard(whitePieces, blackPieces, white);
+        allPseudoLegalMovesBitBoard(whitePieces, blackPieces, white, board);
         return new ArrayList<>(algebraicMoves);
     }
 

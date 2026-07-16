@@ -24,7 +24,7 @@ public class Main {
     long whiteRooks = 0x0000000001000000L; // e4
     long whiteKnights = 0x0000000000000000L; // 
     long whiteBishops = 0x0000000000000000L; // 
-    long whiteQueens = 0x0000000008000000L; // 
+    long whiteQueens = 0x0000000000000000L; // 
     long whiteKing = 0x0000000000001000L; // e2
 
     long blackPawns = 0L;
@@ -77,23 +77,20 @@ public class Main {
     }
     
     public ArrayList<Move> whiteMoves(){
-        legalMoves.loadData(board);
         ArrayList<Move> legalMovesL = new ArrayList<>();
-        for (long group : whitePiecesCopy) {
+
             //System.out.printf("%016X%n", group);
-            while (group != 0) {
-                int square = Long.numberOfTrailingZeros(group);
+
+
                 //System.out.println(square);
-                legalMovesL = legalMoves.allLegalMoves(square, whitePieces, blackPieces, true);
-                System.out.println(legalMovesL.size());
+                legalMovesL = legalMoves.allLegalMoves(whitePieces, blackPieces, true, board);
+                //System.out.println(legalMovesL.size());
                 for (Move move : legalMovesL){
-                    System.out.println(move.toAlgebraic(move));
-                }
+                    //System.out.println(move.toAlgebraic(move));
+                }            
                 
             
-                group &= (group -1);
-            }
-        }
+        
         return legalMovesL;
     }
 }

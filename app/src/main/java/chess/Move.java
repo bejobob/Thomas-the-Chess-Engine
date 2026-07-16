@@ -44,4 +44,8 @@ public class Move {
         int rank = move.to / 8 + 1;
         return move.pieceType + file + rank;
     }
+
+    public String toString(){
+        return pieceType + "on " + this.from + toAlgebraic(this);
+    }
 }

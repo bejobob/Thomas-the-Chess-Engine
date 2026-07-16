@@ -30,11 +30,11 @@ public class Board {
         this.blackBishops = blackBishops;
         this.blackQueens = blackQueens;
         this.blackKing = blackKing;
-        this.whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
-        this.blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
+        whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
+        blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
     }
 
-    public Long getBitboard(String pieceType, boolean white){
+    public long getBitboard(String pieceType, boolean white){
         if (pieceType.equals("P")){
             return white? whitePawns : blackPawns;
         } else if (pieceType.equals("N")){
@@ -45,9 +45,14 @@ public class Board {
             return white? whiteRooks : blackRooks;
         } else if (pieceType.equals("Q")){
             return white? whiteQueens : blackQueens;
-        } else {
+        } else if (pieceType.equals("K")) {
             return white? whiteKing : blackKing;
+        } else if (pieceType.equals("allW")){
+            return whitePieces;
+        } else if (pieceType.equals("allB")){
+            return blackPieces;
         }
+        return 0L;
     }
 
     public void setBitboard(String pieceType, Long val, boolean white){
