@@ -33,23 +33,60 @@ public class legalMoves {
         return ((board.whitePieces | board.blackPieces) & (1L << square)) != 0;
     }
     // STARTING FROM HERE WE ARE GENERATING PSEUDO-LEGAL MOVES. THESE DO NOT REPRESENT THE ACTUAL LEGAL MOVES //
-    /*
-    public static long masterMoves(String pieceType){
-        int[] offsets = Offsets.getOffsets(pieceType);
-        for (int offset : offsets){
-            
-        }
-    }
-        */
+    
     /**
-     * 
+     * Finds all the available pseudo-legal moves for a piece
+     * @param pieceType the piece type
+     * @param square the square the piece is currently on
+     * @param board the chess board
+     * @param white whether the piece is a white piece or a black piece
+     * @return a bitboard representing all the possible pseudo-legal target squares
+     */
+    public static long masterMoves(String pieceType, int square, Board board, boolean white){
+        int[] offsets = Offsets.getOffsets(pieceType);
+        int itter = Offsets.getItter(pieceType);
+        long moves = 0L;
+        System.out.println("Square " + square);
+        System.out.println("Itter " + itter);
+        for (int offset : offsets){
+            System.out.println("Offset " + offset);
+            for (int i = 1; i <= itter; i++){
+                
+                System.out.println("Testing square "+ (square+offset*i) + " (" + Integer.toHexString(square+offset*i) + ")");
+                if ((square + offset*i < 0) || (square + offset*i > 63)){ // if the move takes us out of the board
+                    System.out.println("Out of bounds");
+                    break;
+                }
+                if (Math.abs((square + offset*i)%8-(square + offset*(i-1))%8) > 2){ // if we wrap around the board. I say 2 to permit knights to move properly
+                    System.out.println("Wrap" + Math.abs((square + offset*i)%8-(square + offset*(i-1))));
+                    break;
+                }
+                if (((white? board.whitePieces : board.blackPieces) & (1L << (square + offset*i))) != 0){ // if the target square contains a friendly piece
+                    System.out.println("Friendly");
+                    break;
+                }
+                if (((white? board.blackPieces : board.whitePieces) & (1L << (square + offset*i))) != 0){ // if the target square contains an enemy piece, add the possible move to the move list, and then break
+                    System.out.println("Enemy");
+                    PmovesL.add(new Move(square, square+offset*i, pieceType)); //TODO: figure out how to identify what the captured piece is so I can remove it from the enemy boards
+                    moves |= square+offset*i;
+                    break;
+                }
+                System.out.println("Clear");
+                PmovesL.add(new Move(square, square+offset*i, pieceType));
+                moves |= 1L << square+offset*i;
+            }
+        }
+        return moves;
+    }
+        
+    /**
+     * Finds all the available pseudo-legal moves for a pawn. This must be a separate method because of the unique behaviour of pawn movement
      * @param square the square the pawn is on
      * @param whitePieces // the bitboard representing all the white pieces
      * @param blackPieces // the bitboard representing all the black pieces
      * @param white // is the current player white or black, referring to the colour of the pieces they are using and not that of their skin
      * @return a bitboard representing all the legal moves for the pawn on the given square
      */
-
     public static long pawnMoves(int square, boolean white, Board board) {
         long otherPieces = white ? board.blackPieces : board.whitePieces;
         int forward = white ? 8 : -8;
@@ -90,6 +127,7 @@ public class legalMoves {
         return moves;
     }
 
+    /* deprecated pseudo-legal move generators
     public static long knightMoves(int square, boolean white, Board board) {
         long otherPieces = white ? board.blackPieces : board.whitePieces;
         long moves = 0L;
@@ -217,6 +255,7 @@ public class legalMoves {
         }
         return moves;
     }
+        */
 
     // END OF THE GENERATION OF PSEUDO-LEGAL MOVES //
 
@@ -226,7 +265,7 @@ public class legalMoves {
         int square = 0;
         long moves = 0L;
         while (pieces != 0L) {
-            //System.out.println(Long.toHexString(pieces));
+            System.out.println("Pieces " + Long.toHexString(pieces));
             //System.out.println(Long.toHexString(board.whiteKing));
             //System.out.println("test");
             square = Long.numberOfTrailingZeros(pieces);
@@ -234,19 +273,20 @@ public class legalMoves {
             if ((pieces & board.getBitboard("P", white)) != 0){
                 moves |= pawnMoves(square, white, board);
             } else if ((pieces & board.getBitboard("N", white)) != 0){
-                moves |= knightMoves(square, white, board);
+                moves |= masterMoves("N", square, board, white);
             } else if ((pieces & board.getBitboard("R", white)) != 0){
-                moves |= rookMoves(square, white, "R", board);
+                moves |= masterMoves("R", square, board, white);
             } else if ((pieces & board.getBitboard("B", white)) != 0){
-                moves |= bishopMoves(square, white, "B", board);
+                moves |= masterMoves("B", square, board, white);
             } else if ((pieces & board.getBitboard("Q", white)) != 0){
-                moves |= queenMoves(square, white, board);
+                moves |= masterMoves("Q", square, board, white);
             } else if ((pieces & board.getBitboard("K", white)) != 0){
-                moves |= kingMoves(square, white, board);
+                moves |= masterMoves("K", square, board, white);
             }
             pieces &= (pieces -1);
-            System.out.println(Long.toHexString(pieces));
+            //System.out.println(Long.toHexString(pieces));
         }
+        System.out.println(PmovesL.size());
         return moves;
     }
 
