@@ -21,14 +21,14 @@ public class Main {
     int BASE_QUEEN_VALUE = 9;
 
     long whitePawns = 0x0000000000000000L; // 
-    long whiteRooks = 0x0000000001000000L; // e4
+    long whiteRooks = 0x00000000010000000L; // e4
     long whiteKnights = 0x0000000000000000L; // 
     long whiteBishops = 0x0000000000000000L; // 
     long whiteQueens = 0x0000000000000000L; // 
     long whiteKing = 0x0000000000001000L; // e2
 
     long blackPawns = 0L;
-    long blackRooks = 1000000000000000L;
+    long blackRooks = 0x5000000000000000L;
     long blackKnights = 0L;
     long blackBishops = 0L;
     long blackQueens = 0L;

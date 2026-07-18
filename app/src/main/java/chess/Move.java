@@ -46,6 +46,6 @@ public class Move {
     }
 
     public String toString(){
-        return pieceType + "on " + this.from + toAlgebraic(this);
+        return toAlgebraic(this);
     }
 }
