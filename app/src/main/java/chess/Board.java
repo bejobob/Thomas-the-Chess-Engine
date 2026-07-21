@@ -57,22 +57,22 @@ public class Board {
 
     public void setBitboard(String pieceType, Long val, boolean white){
         switch (pieceType) {
-            case "pawn":
+            case "P":
                 if (white){whitePawns = val;} else {blackPawns = val;}
                 break;
-            case "knight":
+            case "N":
                 if (white){whiteKnights = val;} else {blackKnights = val;}
                 break;
-            case "bishop":
+            case "B":
                 if (white){whiteBishops = val;} else {blackBishops = val;}
                 break;
-            case "rook":
+            case "R":
                 if (white){whiteRooks = val;} else {blackRooks = val;}
                 break;
-            case "queen":
+            case "Q":
                 if (white){whiteQueens = val;} else {blackQueens = val;}
                 break;
-            case "king":
+            case "K":
                 if (white){whiteKing = val;} else {blackKing = val;}
                 break;
             default:

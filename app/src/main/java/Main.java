@@ -1,11 +1,11 @@
-/*
-Next things to do:
 
-detect checks.
-go from finding all the pseudo-legal moves to only the legal moves.
-    this involves undoing moves. this means I'll need to be able to undo a capture. How to remember what type of piece was captured?
 
-*/
+//TODO: Verify that captures really work. I think they do, but make sure.
+//TODO: Castling
+//TODO: En-passant
+//TODO: Stalemate
+//TODO: Threefold repetition
+//TODO: Checkmate
 
 import chess.legalMoves;
 import chess.Board;
@@ -20,15 +20,15 @@ public class Main {
     int BASE_ROOK_VALUE = 5;
     int BASE_QUEEN_VALUE = 9;
 
-    long whitePawns = 0x0000000000000000L; // 
-    long whiteRooks = 0x00000000010000000L; // e4
-    long whiteKnights = 0x0000000000000000L; // 
-    long whiteBishops = 0x0000000000000000L; // 
-    long whiteQueens = 0x0000000000000000L; // 
+    long whitePawns = 0x0L; // 
+    long whiteRooks = 0x0000000010000000L; // e4
+    long whiteKnights = 0x0L; // 
+    long whiteBishops = 0x0L; // 
+    long whiteQueens = 0x0L; // 
     long whiteKing = 0x0000000000001000L; // e2
 
     long blackPawns = 0L;
-    long blackRooks = 0x5000000000000000L;
+    long blackRooks = 0x1000000000000000L;
     long blackKnights = 0L;
     long blackBishops = 0L;
     long blackQueens = 0L;
