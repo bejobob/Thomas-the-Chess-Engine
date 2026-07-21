@@ -2,7 +2,7 @@ package chess;
 
 import java.util.ArrayList;
 
-public class legalMoves {
+public class brain {
 
     public static ArrayList<Move> PmovesL = new ArrayList<>();
     public static ArrayList<Move> movesL = new ArrayList<>();
@@ -37,19 +37,19 @@ public class legalMoves {
      * @param board the board
      * @return a String
      */
-    public static String captureType(long square, boolean white, Board board){
+    public static PieceType captureType(long square, boolean white, Board board){
         if ((square & (white? board.whitePawns : board.blackPawns)) != 0L){
-            return "P";
+            return PieceType.PAWN;
         } else if ((square & (white? board.whiteKnights : board.blackKnights)) != 0L){
-            return "N";
+            return PieceType.KNIGHT;
         } else if ((square & (white? board.whiteBishops : board.blackBishops)) != 0L){
-            return "B";
+            return PieceType.BISHOP;
         } else if ((square & (white? board.whiteRooks : board.blackRooks)) != 0L){
-            return "R";
+            return PieceType.ROOK;
         } else if ((square & (white? board.whiteQueens : board.blackQueens)) != 0L){
-            return "Q";
+            return PieceType.QUEEN;
         }else if ((square & (white? board.whiteKing : board.blackKing)) != 0L){
-            return "K";
+            return PieceType.QUEEN;
         }
         return null;
     }
@@ -63,7 +63,7 @@ public class legalMoves {
      * @param white whether the piece is a white piece or a black piece
      * @return a bitboard representing all the possible pseudo-legal target squares
      */
-    public static long masterMoves(String pieceType, int square, Board board, boolean white, boolean list){
+    public static long masterMoves(PieceType pieceType, int square, Board board, boolean white, boolean list){
         int[] offsets = Offsets.getOffsets(pieceType);
         int itter = Offsets.getItter(pieceType);
         long moves = 0L;
@@ -88,8 +88,7 @@ public class legalMoves {
                 }
                 if (((white? board.blackPieces : board.whitePieces) & (1L << (square + offset*i))) != 0){ // if the target square contains an enemy piece, add the possible move to the move list, and then break
                     //System.out.println("Enemy"); //uncomment to see step-by-step of move checking
-                    String captured = captureType(1L << (square + offset*i), !white, board);
-                    System.out.println(captured);
+                    PieceType captured = captureType(1L << (square + offset*i), !white, board);
                     if (list) PmovesL.add(new Move(square, square+offset*i, pieceType, square+offset*i, captured)); //TODO: figure out how to identify what the captured piece is so I can remove it from the enemy boards
                     
                     moves |= 1l << square+offset*i;
@@ -120,11 +119,11 @@ public class legalMoves {
 
         if ((!isOccupied(square+forward, board)) && (0 <= (square+forward) && (square+forward) < 64)) {
             moves |= 1L << (square+forward);
-            PmovesL.add(new Move(square, square+forward, "P"));
+            PmovesL.add(new Move(square, square+forward, PieceType.PAWN));
         }
         if ((square / 8 == (white ? 1 : 6)) && (!isOccupied(square+forward, board)) && (!isOccupied(square+2*forward, board) && (0 <= (square+2*forward) && (square+2*forward) < 64))) {
             moves |= 1L << (square+2*forward);
-            PmovesL.add(new Move(square, square+2*forward, "P"));
+            PmovesL.add(new Move(square, square+2*forward, PieceType.PAWN));
         }
         if ((otherPieces & (1L << (square+leftCapture))) != 0L) {
             if (0 > (square+leftCapture) || (square+leftCapture) >= 64) {
@@ -132,7 +131,7 @@ public class legalMoves {
             }
             if (Math.abs((square % 8) - ((square + leftCapture) % 8)) > 1) {
                 moves |= 1L << (square+leftCapture);
-                PmovesL.add(new Move(square, square+leftCapture, "P"));
+                PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN));
             }
         }
         if ((otherPieces & (1L << (square+rightCapture))) != 0L) {
@@ -141,7 +140,7 @@ public class legalMoves {
             }
             if (Math.abs((square % 8) - ((square + rightCapture) % 8)) > 1) {
                 moves |= 1L << (square+rightCapture);
-                PmovesL.add(new Move(square, square+rightCapture, "P"));
+                PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN));
             }
         }
         return moves;
@@ -167,18 +166,18 @@ public class legalMoves {
             //System.out.println("Pieces " + Long.toHexString(pieces)); uncomment to see step-by-step of move checking
 
             square = Long.numberOfTrailingZeros(pieces);
-            if (((1L<<square) & board.getBitboard("P", white)) != 0){
+            if (((1L<<square) & board.getBitboard(PieceType.PAWN, white)) != 0){
                 moves |= pawnMoves(square, white, board);
-            } else if (((1L<<square) & board.getBitboard("N", white)) != 0){
-                moves |= masterMoves("N", square, board, white, list);
-            } else if (((1L<<square) & board.getBitboard("R", white)) != 0){
-                moves |= masterMoves("R", square, board, white, list);
-            } else if (((1L<<square) & board.getBitboard("B", white)) != 0){
-                moves |= masterMoves("B", square, board, white, list);
-            } else if (((1L<<square) & board.getBitboard("Q", white)) != 0){
-                moves |= masterMoves("Q", square, board, white, list);
-            } else if (((1L<<square) & board.getBitboard("K", white)) != 0){
-                moves |= masterMoves("K", square, board, white, list);
+            } else if (((1L<<square) & board.getBitboard(PieceType.KNIGHT, white)) != 0){
+                moves |= masterMoves(PieceType.KNIGHT, square, board, white, list);
+            } else if (((1L<<square) & board.getBitboard(PieceType.BISHOP, white)) != 0){
+                moves |= masterMoves(PieceType.BISHOP, square, board, white, list);
+            } else if (((1L<<square) & board.getBitboard(PieceType.ROOK, white)) != 0){
+                moves |= masterMoves(PieceType.ROOK, square, board, white, list);
+            } else if (((1L<<square) & board.getBitboard(PieceType.QUEEN, white)) != 0){
+                moves |= masterMoves(PieceType.QUEEN, square, board, white, list);
+            } else if (((1L<<square) & board.getBitboard(PieceType.KING, white)) != 0){
+                moves |= masterMoves(PieceType.KING, square, board, white, list);
             }
             pieces &= (pieces -1);
         }
@@ -188,7 +187,6 @@ public class legalMoves {
     public static void makeMove(Move move, boolean white, Board board){
         long specificPieces = board.getBitboard(move.pieceType, white);
         if (move.captureType != null){
-            System.out.println("test");
             board.setBitboard(move.captureType, board.getBitboard(move.captureType, !white) & ~(1L << move.captureOn), !white);
         }
         specificPieces &= ~(1L << move.from);
@@ -202,6 +200,9 @@ public class legalMoves {
      */
     public static void unMove(Move move, boolean white, Board board){
         long specificPieces = board.getBitboard(move.pieceType, white);
+        if (move.captureType != null){
+            board.setBitboard(move.captureType, board.getBitboard(move.captureType, !white) | (1L<< move.captureOn), !white);
+        }
         specificPieces &= ~(1L << move.to);
         specificPieces |= 1L << move.from;
 

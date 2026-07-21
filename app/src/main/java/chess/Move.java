@@ -8,10 +8,12 @@ package chess;
 public class Move {
     int from;
     int to;
+
+    // these are optional fields:
     int captureOn;
-    String pieceType;
-    String captureType;
-    String promotion;
+    PieceType pieceType;
+    PieceType captureType;
+    PieceType promotion;
 
     /**
      * Default move constructor. This assumes there is no capture or promotion
@@ -19,26 +21,20 @@ public class Move {
      * @param to the target square
      * @param pieceType the piece type
      */
-    public Move(int from, int to, String pieceType){
+    public Move(int from, int to, PieceType pieceType){
         this.from = from;
         this.to = to;
         this.pieceType = pieceType;
     }
 
-    /**
-     * Move constructor for a move that captures a piece.
-     * @param from the starting square
-     * @param to the target square
-     * @param pieceType the type of piece that is being moved
-     * @param captureOn the square the capture takes place on. This is different from the target square because of en-passant
-     * @param captureType the type of piece that was captured
-     */
-    public Move(int from, int to, String pieceType, int captureOn, String captureType){
+    public Move(int from, int to, PieceType pieceType, int captureOn, PieceType captureType){
         this.from = from;
         this.to = to;
         this.pieceType = pieceType;
         this.captureOn = captureOn;
         this.captureType = captureType;
+        System.out.println("Capture created: pieceType = " + pieceType);
+
     }
 
     /**
@@ -50,7 +46,7 @@ public class Move {
      * 
      * TODO: figure out if I can use the default constructor for this? If I remove the piecetype because it's always a pawn, it's the same as the first...
      */
-    public Move(int from, int to, String pieceType, String promotion){
+    public Move(int from, int to, PieceType pieceType, PieceType promotion){
         this.from = from;
         this.to = to;
         this.pieceType = pieceType;
@@ -66,7 +62,7 @@ public class Move {
      * @param captureType the type of piece that was captured
      * @param promotion the type of piece that the pawn in promoting into
      */
-    public Move(int from, int to, String pieceType, int captureOn, String captureType, String promotion){
+    public Move(int from, int to, PieceType pieceType, int captureOn, PieceType captureType, PieceType promotion){
         this.from = from;
         this.to = to;
         this.pieceType = pieceType;
@@ -83,7 +79,7 @@ public class Move {
     public String toAlgebraic(Move move){
         char file = (char) ('a' + (move.to % 8));
         int rank = move.to / 8 + 1;
-        return move.pieceType + file + rank;
+        return move.pieceType.toString() + file + rank;
     }
 
     public String toString(){

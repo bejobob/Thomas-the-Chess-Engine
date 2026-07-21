@@ -34,45 +34,41 @@ public class Board {
         blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
     }
 
-    public long getBitboard(String pieceType, boolean white){
-        if (pieceType.equals("P")){
+    public long getBitboard(PieceType pieceType, boolean white){
+        if (pieceType.equals(PieceType.PAWN)){
             return white? whitePawns : blackPawns;
-        } else if (pieceType.equals("N")){
+        } else if (pieceType.equals(PieceType.KNIGHT)){
             return white? whiteKnights : blackKnights;
-        } else if (pieceType.equals("B")){
+        } else if (pieceType.equals(PieceType.BISHOP)){
             return white? whiteBishops : blackBishops;
-        } else if (pieceType.equals("R")){
+        } else if (pieceType.equals(PieceType.ROOK)){
             return white? whiteRooks : blackRooks;
-        } else if (pieceType.equals("Q")){
+        } else if (pieceType.equals(PieceType.QUEEN)){
             return white? whiteQueens : blackQueens;
-        } else if (pieceType.equals("K")) {
+        } else if (pieceType.equals(PieceType.KING)) {
             return white? whiteKing : blackKing;
-        } else if (pieceType.equals("allW")){
-            return whitePieces;
-        } else if (pieceType.equals("allB")){
-            return blackPieces;
         }
         return 0L;
     }
 
-    public void setBitboard(String pieceType, Long val, boolean white){
+    public void setBitboard(PieceType pieceType, Long val, boolean white){
         switch (pieceType) {
-            case "P":
+            case PAWN:
                 if (white){whitePawns = val;} else {blackPawns = val;}
                 break;
-            case "N":
+            case KNIGHT:
                 if (white){whiteKnights = val;} else {blackKnights = val;}
                 break;
-            case "B":
+            case BISHOP:
                 if (white){whiteBishops = val;} else {blackBishops = val;}
                 break;
-            case "R":
+            case ROOK:
                 if (white){whiteRooks = val;} else {blackRooks = val;}
                 break;
-            case "Q":
+            case QUEEN:
                 if (white){whiteQueens = val;} else {blackQueens = val;}
                 break;
-            case "K":
+            case KING:
                 if (white){whiteKing = val;} else {blackKing = val;}
                 break;
             default:

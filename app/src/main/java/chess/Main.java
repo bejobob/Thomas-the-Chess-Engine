@@ -1,3 +1,4 @@
+package chess;
 
 
 //TODO: Verify that captures really work. I think they do, but make sure.
@@ -6,11 +7,9 @@
 //TODO: Stalemate
 //TODO: Threefold repetition
 //TODO: Checkmate
+//TODO: Finish writing javadoc for all my methods. Good to stay organized!
 
-import chess.legalMoves;
-import chess.Board;
 import java.util.ArrayList;
-import chess.Move;
 
 public class Main {
 
@@ -83,7 +82,7 @@ public class Main {
 
 
                 //System.out.println(square);
-                legalMovesL = legalMoves.allLegalMoves(whitePieces, blackPieces, true, board);
+                legalMovesL = brain.allLegalMoves(whitePieces, blackPieces, true, board);
                 //System.out.println(legalMovesL.size());
                 for (Move move : legalMovesL){
                     //System.out.println(move.toAlgebraic(move));
