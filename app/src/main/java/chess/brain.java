@@ -1,13 +1,12 @@
 package chess;
 
+import java.security.DrbgParameters.Capability;
 import java.util.ArrayList;
 
 public class brain {
 
-    public static ArrayList<Move> PmovesL = new ArrayList<>();
-    public static ArrayList<Move> movesL = new ArrayList<>();
-
-    public static Long occupied;
+    private static ArrayList<Move> PmovesL = new ArrayList<>();
+    private static ArrayList<Move> movesL = new ArrayList<>();
 
     /**
      * Checks if the current player is in check
@@ -86,16 +85,20 @@ public class brain {
                     //System.out.println("Friendly"); uncomment to see step-by-step of move checking
                     break;
                 }
+                boolean breaksCastle = false;
+                if ((pieceType == PieceType.KING || pieceType == PieceType.ROOK)){
+                    if ((square%8 == 0 || square%8 == 7 || square%8 == 4)&&(square/8 == 0 || square/8 == 7)) breaksCastle = true;
+                }
                 if (((white? board.blackPieces : board.whitePieces) & (1L << (square + offset*i))) != 0){ // if the target square contains an enemy piece, add the possible move to the move list, and then break
                     //System.out.println("Enemy"); //uncomment to see step-by-step of move checking
                     PieceType captured = captureType(1L << (square + offset*i), !white, board);
-                    if (list) PmovesL.add(new Move(square, square+offset*i, pieceType, square+offset*i, captured)); //TODO: figure out how to identify what the captured piece is so I can remove it from the enemy boards
+                    if (list) PmovesL.add(new Move(square, square+offset*i, pieceType, square+offset*i, captured, null, MoveType.CAPTURE, breaksCastle)); //TODO: figure out how to identify what the captured piece is so I can remove it from the enemy boards
                     
                     moves |= 1l << square+offset*i;
                     break;
                 }
                 //System.out.println("Clear"); uncomment to see step-by-step of move checking
-                if (list) PmovesL.add(new Move(square, square+offset*i, pieceType));
+                if (list) PmovesL.add(new Move(square, square+offset*i, pieceType, 0, null, null, MoveType.MOVE, breaksCastle));
                 moves |= 1L << square+offset*i;
             }
         }
@@ -117,30 +120,30 @@ public class brain {
         int rightCapture = white ? 9 : -7;
         long moves = 0L;
 
-        if ((!isOccupied(square+forward, board)) && (0 <= (square+forward) && (square+forward) < 64)) {
+        if ((!isOccupied(square+forward, board)) && (0 <= (square+forward) && (square+forward) < 64)) { // if the square ahead is unoccupied and is on the board
             moves |= 1L << (square+forward);
-            PmovesL.add(new Move(square, square+forward, PieceType.PAWN));
+            PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, null, null, false));
         }
         if ((square / 8 == (white ? 1 : 6)) && (!isOccupied(square+forward, board)) && (!isOccupied(square+2*forward, board) && (0 <= (square+2*forward) && (square+2*forward) < 64))) {
-            moves |= 1L << (square+2*forward);
-            PmovesL.add(new Move(square, square+2*forward, PieceType.PAWN));
+            moves |= 1L << (square+2*forward); // same as before, but for the first double-move
+            PmovesL.add(new Move(square, square+2*forward, PieceType.PAWN, 0, null, null, MoveType.MOVE, false));
         }
-        if ((otherPieces & (1L << (square+leftCapture))) != 0L) {
+        if ((otherPieces & (1L << (square+leftCapture))) != 0L) { // if there is a piece on the left capture square
             if (0 > (square+leftCapture) || (square+leftCapture) >= 64) {
-                return moves;
+                return moves; // if the capture is off the board. We return because we have already checked for going ahead and the double first move.
             }
-            if (Math.abs((square % 8) - ((square + leftCapture) % 8)) > 1) {
+            if (Math.abs((square % 8) - ((square + leftCapture) % 8)) > 1) { // if we aren't wrapping around the board
                 moves |= 1L << (square+leftCapture);
-                PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN));
+                PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, leftCapture, captureType(leftCapture, white, board), null, MoveType.CAPTURE, false));
             }
         }
-        if ((otherPieces & (1L << (square+rightCapture))) != 0L) {
+        if ((otherPieces & (1L << (square+rightCapture))) != 0L) { // ditto but on the right
             if (0 > (square+rightCapture) || (square+rightCapture) >= 64) {
                 return moves;
             }
             if (Math.abs((square % 8) - ((square + rightCapture) % 8)) > 1) {
                 moves |= 1L << (square+rightCapture);
-                PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN));
+                PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, rightCapture, captureType(rightCapture, white, board), null, MoveType.CAPTURE, false));
             }
         }
         return moves;
@@ -189,6 +192,34 @@ public class brain {
         if (move.captureType != null){
             board.setBitboard(move.captureType, board.getBitboard(move.captureType, !white) & ~(1L << move.captureOn), !white);
         }
+        if (move.breaksCastle){
+            if (white){
+                if (move.pieceType == PieceType.KING){
+                    board.wO_O = false;
+                    board.wO_O_O = false;
+                }
+                if (move.pieceType == PieceType.ROOK){
+                    if (move.from%8 == 0){
+                        board.wO_O = false;
+                    } else {
+                        board.wO_O_O = false;
+                    }
+                }
+            } else {
+                if (move.pieceType == PieceType.KING){
+                    board.bO_O = false;
+                    board.bO_O_O = false;
+                }
+                if (move.pieceType == PieceType.ROOK){
+                    if (move.from%8 == 0){
+                        board.bO_O = false;
+                    } else {
+                        board.bO_O_O = false;
+                    }
+                }
+            }
+        }
+
         specificPieces &= ~(1L << move.from);
         specificPieces |= 1L << move.to;
         board.setBitboard(move.pieceType, specificPieces, white);
@@ -202,6 +233,33 @@ public class brain {
         long specificPieces = board.getBitboard(move.pieceType, white);
         if (move.captureType != null){
             board.setBitboard(move.captureType, board.getBitboard(move.captureType, !white) | (1L<< move.captureOn), !white);
+        }
+        if (move.breaksCastle){
+            if (white){
+                if (move.pieceType == PieceType.KING){
+                    board.wO_O = true;
+                    board.wO_O_O = true;
+                }
+                if (move.pieceType == PieceType.ROOK){
+                    if (move.from%8 == 0){
+                        board.wO_O = true;
+                    } else {
+                        board.wO_O_O = true;
+                    }
+                }
+            } else {
+                if (move.pieceType == PieceType.KING){
+                    board.bO_O = true;
+                    board.bO_O_O = true;
+                }
+                if (move.pieceType == PieceType.ROOK){
+                    if (move.from%8 == 0){
+                        board.bO_O = true;
+                    } else {
+                        board.bO_O_O = true;
+                    }
+                }
+            }
         }
         specificPieces &= ~(1L << move.to);
         specificPieces |= 1L << move.from;

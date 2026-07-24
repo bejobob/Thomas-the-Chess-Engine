@@ -8,6 +8,8 @@ package chess;
 public class Move {
     int from;
     int to;
+    MoveType moveType;
+    boolean breaksCastle;
 
     // these are optional fields:
     int captureOn;
@@ -15,60 +17,40 @@ public class Move {
     PieceType captureType;
     PieceType promotion;
 
-    /**
-     * Default move constructor. This assumes there is no capture or promotion
-     * @param from the starting square
-     * @param to the target square
-     * @param pieceType the piece type
-     */
-    public Move(int from, int to, PieceType pieceType){
-        this.from = from;
-        this.to = to;
-        this.pieceType = pieceType;
-    }
-
-    public Move(int from, int to, PieceType pieceType, int captureOn, PieceType captureType){
-        this.from = from;
-        this.to = to;
-        this.pieceType = pieceType;
-        this.captureOn = captureOn;
-        this.captureType = captureType;
-        System.out.println("Capture created: pieceType = " + pieceType);
-
-    }
 
     /**
-     * Move constructor for a pawn promoting
-     * @param from the starting square
-     * @param to the target square
-     * @param pieceType the piece type, though this will always be a pawn in the case of a promotion
-     * @param promotion the type of piece the pawn is becoming
      * 
-     * TODO: figure out if I can use the default constructor for this? If I remove the piecetype because it's always a pawn, it's the same as the first...
-     */
-    public Move(int from, int to, PieceType pieceType, PieceType promotion){
-        this.from = from;
-        this.to = to;
-        this.pieceType = pieceType;
-        this.promotion = promotion;
-    }
-
-    /**
-     * Move constructor for a pawn that captures a piece and promotes on the same move
      * @param from the starting square
      * @param to the target square
-     * @param pieceType the type of piece being moved
-     * @param captureOn the square the capture takes place on
-     * @param captureType the type of piece that was captured
-     * @param promotion the type of piece that the pawn in promoting into
+     * @param pieceType the type of piece that is moving
+     * @param captureOn the square a capture takes place on. This is separate from moveTo because of en-passant
+     * @param captureType the type of piece that is being captured
+     * @param promotion the type of piece that a pawn is promoting to
+     * @param moveType the type of move
+     * @param breaksCastle whether or not this move breaks castling rights.
      */
-    public Move(int from, int to, PieceType pieceType, int captureOn, PieceType captureType, PieceType promotion){
+    public Move(int from, int to, PieceType pieceType, int captureOn, PieceType captureType, PieceType promotion, MoveType moveType, boolean breaksCastle){
         this.from = from;
         this.to = to;
         this.pieceType = pieceType;
-        this.captureOn = captureOn;
-        this.captureType = captureType;
-        this.promotion = promotion;
+        this.breaksCastle = breaksCastle;
+        switch (moveType) {
+            case CAPTURE:
+                this.captureOn = captureOn;
+                this.captureType = captureType;
+                break;
+            case SHORTCASTLE:
+                break;
+            case LONGCASTLE:
+                break;
+            case PROMOTION:
+                this.promotion = promotion;
+            case CAPTURE_PROMOTION:
+                this.captureType = captureType; // we don't need to specify the captureOn square because you cannot en-passant and promote
+                this.promotion = promotion;
+            default:
+                break;
+        }
     }
     
     /**

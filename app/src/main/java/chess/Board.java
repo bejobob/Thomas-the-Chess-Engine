@@ -16,6 +16,11 @@ public class Board {
     public long whitePieces;
     public long blackPieces;
 
+    public boolean wO_O = true;
+    public boolean wO_O_O = true;
+    public boolean bO_O = true;
+    public boolean bO_O_O = true;
+
     public Board(long whitePawns, long whiteRooks, long whiteKnights, long whiteBishops, long whiteQueens, long whiteKing,
                  long blackPawns, long blackRooks, long blackKnights, long blackBishops, long blackQueens, long blackKing) {
         this.whitePawns = whitePawns;
