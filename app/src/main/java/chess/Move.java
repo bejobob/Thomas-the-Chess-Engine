@@ -59,8 +59,12 @@ public class Move {
      * @return the algebraic representation of the move
      */
     public String toAlgebraic(Move move){
+        String piece = move.pieceType.toString();
+        char x = (move.moveType == MoveType.CAPTURE || move.moveType == MoveType.CAPTURE_PROMOTION)? 'x' : null;
         char file = (char) ('a' + (move.to % 8));
         int rank = move.to / 8 + 1;
+        //TODO: how to add "+" or "#" when the move causes a check
+        //TODO: move is O-O or O-O-O for castling
         return move.pieceType.toString() + file + rank;
     }
 

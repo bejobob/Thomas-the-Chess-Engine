@@ -19,7 +19,7 @@ public class Main {
     int BASE_ROOK_VALUE = 5;
     int BASE_QUEEN_VALUE = 9;
 
-    long whitePawns = 0x0L; // 
+    long whitePawns = 0x0000000000000100L; // 
     long whiteRooks = 0x0000000010000000L; // e4
     long whiteKnights = 0x0L; // 
     long whiteBishops = 0x0L; // 
