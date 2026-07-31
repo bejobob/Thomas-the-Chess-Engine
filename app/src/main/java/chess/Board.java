@@ -1,3 +1,10 @@
+/**
+ * Board
+ * Represents the state of the chess board
+ * @author Benjamin Kealey
+ * @version 2026/07/30
+ */
+
 package chess;
 
 public class Board {

@@ -1,3 +1,10 @@
+/**
+ * Offsets
+ * Facilitates finding legal moves by providing the offsets for the movements of all the piece types with the exception of pawns
+ * @author Benjamin Kealey
+ * @version 2026/07/30
+ */
+
 package chess;
 
 public class Offsets {

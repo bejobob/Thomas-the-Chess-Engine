@@ -1,10 +1,12 @@
-package chess;
 /**
  * Move
  * A class representing a move on a chess board
  * @author Benjamin Kealey
  * @version 2026/07/20
  */
+
+package chess;
+
 public class Move {
     int from;
     int to;
@@ -17,9 +19,7 @@ public class Move {
     PieceType captureType;
     PieceType promotion;
 
-
     /**
-     * 
      * @param from the starting square
      * @param to the target square
      * @param pieceType the type of piece that is moving
@@ -34,6 +34,7 @@ public class Move {
         this.to = to;
         this.pieceType = pieceType;
         this.breaksCastle = breaksCastle;
+        this.moveType = moveType;
         switch (moveType) {
             case CAPTURE:
                 this.captureOn = captureOn;
@@ -45,6 +46,7 @@ public class Move {
                 break;
             case PROMOTION:
                 this.promotion = promotion;
+                break;
             case CAPTURE_PROMOTION:
                 this.captureType = captureType; // we don't need to specify the captureOn square because you cannot en-passant and promote
                 this.promotion = promotion;
@@ -59,13 +61,17 @@ public class Move {
      * @return the algebraic representation of the move
      */
     public String toAlgebraic(Move move){
-        String piece = move.pieceType.toString();
-        char x = (move.moveType == MoveType.CAPTURE || move.moveType == MoveType.CAPTURE_PROMOTION)? 'x' : null;
+        char x = (move.moveType == MoveType.CAPTURE || move.moveType == MoveType.CAPTURE_PROMOTION)? 'x' : '\0';
         char file = (char) ('a' + (move.to % 8));
         int rank = move.to / 8 + 1;
         //TODO: how to add "+" or "#" when the move causes a check
-        //TODO: move is O-O or O-O-O for castling
-        return move.pieceType.toString() + file + rank;
+        if (move.moveType == MoveType.SHORTCASTLE){
+            return "0-0";
+        }
+        if (move.moveType == MoveType.LONGCASTLE){
+            return "0-0-0";
+        }
+        return move.pieceType.toString() + x + file + rank;
     }
 
     public String toString(){

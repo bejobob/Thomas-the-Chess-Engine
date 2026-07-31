@@ -1,3 +1,10 @@
+/**
+ * brain
+ * Finds all the legal moves in a position
+ * @author Benjamin Kealey
+ * @version 2026/07/30
+ */
+
 package chess;
 
 import java.security.DrbgParameters.Capability;
@@ -48,7 +55,7 @@ public class brain {
         } else if ((square & (white? board.whiteQueens : board.blackQueens)) != 0L){
             return PieceType.QUEEN;
         }else if ((square & (white? board.whiteKing : board.blackKing)) != 0L){
-            return PieceType.QUEEN;
+            return PieceType.KING;
         }
         return null;
     }
@@ -85,15 +92,11 @@ public class brain {
                     //System.out.println("Friendly"); uncomment to see step-by-step of move checking
                     break;
                 }
-                boolean breaksCastle = false;
-                if ((pieceType == PieceType.KING || pieceType == PieceType.ROOK)){
-                    if ((square%8 == 0 || square%8 == 7 || square%8 == 4)&&(square/8 == 0 || square/8 == 7)) breaksCastle = true;
-                }
+                boolean breaksCastle = (pieceType == PieceType.KING || pieceType == PieceType.ROOK);
                 if (((white? board.blackPieces : board.whitePieces) & (1L << (square + offset*i))) != 0){ // if the target square contains an enemy piece, add the possible move to the move list, and then break
                     //System.out.println("Enemy"); //uncomment to see step-by-step of move checking
                     PieceType captured = captureType(1L << (square + offset*i), !white, board);
-                    if (list) PmovesL.add(new Move(square, square+offset*i, pieceType, square+offset*i, captured, null, MoveType.CAPTURE, breaksCastle)); //TODO: figure out how to identify what the captured piece is so I can remove it from the enemy boards
-                    
+                    if (list) PmovesL.add(new Move(square, square+offset*i, pieceType, square+offset*i, captured, null, MoveType.CAPTURE, breaksCastle));
                     moves |= 1l << square+offset*i;
                     break;
                 }
@@ -149,7 +152,7 @@ public class brain {
         return moves;
     }
 
-    public static boolean canSCastle(boolean white, Board board, long otherMoves){
+    public static boolean canSCastle(boolean white, Board board, long otherMoves, boolean list){
         long king = board.getBitboard(PieceType.KING, white);
         long shortCastle = king << 1 | king << 2;
 
@@ -157,30 +160,43 @@ public class brain {
 
         if (isInCheck(white, otherMoves, board)) return false; // if the player is in check
         
-        if ((shortCastle & (white? board.whitePieces : board.blackPieces)) != 0) return false; // if there are pieces between the king and the rook
+        // check for any piece (either colour) between king and rook
+        if ((shortCastle & (board.whitePieces | board.blackPieces)) != 0) return false; // if there are pieces between the king and the rook
         
         if (((shortCastle & otherMoves) != 0)) return false; // if the player would castle through check
 
-        PmovesL.add(new Move(0, 0, null, 0, null, null, MoveType.SHORTCASTLE, true));
-
+        if (list) PmovesL.add(new Move(0, 0, PieceType.KING, 0, null, null, MoveType.SHORTCASTLE, true));
+        System.out.println("clear???");
         return true;
     }
 
-    public static boolean canLCastle(boolean white, Board board, long otherMoves) {
+    public static boolean canLCastle(boolean white, Board board, long otherMoves, boolean list) {
         long king = board.getBitboard(PieceType.KING, white);
-        long longCastle = king >> 1 | king >> 2;
+        long longCastle = king >> 1 | king >> 2 | king >> 3;
         
         if (!(white? board.wO_O_O : board.bO_O_O)) return false; // if the player has already lost rights to O-O
 
-        if (isInCheck(white, otherMoves, board)) return false; // if the player is in check
+        if (isInCheck(white, otherMoves, board)){ 
+            System.out.println("is in check");
+            return false; }// if the player is in check
         
-        if ((longCastle & (white? board.whitePieces : board.blackPieces)) != 0) return false; // if there are pieces between the king and the rook
+        if ((longCastle & (board.whitePieces | board.blackPieces)) != 0) {
+            System.out.println("blocked");
+            return false;} // if there are pieces between the king and the rook
         
-        if (((longCastle & otherMoves) != 0)) return false; // if the player would castle through check
+        if (((longCastle & otherMoves) != 0)) {
+            System.out.println("through check");
+            return false;} // if the player would castle through check
 
-        PmovesL.add(new Move(0, 0, null, 0, null, null, MoveType.LONGCASTLE, true));
-
+        if (list) PmovesL.add(new Move(0, 0, PieceType.KING, 0, null, null, MoveType.LONGCASTLE, true));
+        System.out.println("clear??");
         return true;
+    }
+
+    public static void addCastling(boolean white, Board board){
+        long otherMoves = allPseudoLegalMovesBitBoard(board.whitePieces, board.blackPieces, !white, board, false);
+        System.out.println(canSCastle(white, board, otherMoves, true));
+        System.out.println(canLCastle(white, board, otherMoves, true));
     }
 
     // END OF THE GENERATION OF PSEUDO-LEGAL MOVES //
@@ -195,7 +211,6 @@ public class brain {
      * @return a bitboard representing all the places !white could move to
      */
     public static long allPseudoLegalMovesBitBoard(long whitePieces, long blackPieces, boolean white, Board board, boolean list) {
-        movesL.clear();
         long pieces = white? whitePieces : blackPieces;
         int square = 0;
         long moves = 0L;
@@ -234,9 +249,9 @@ public class brain {
                 }
                 if (move.pieceType == PieceType.ROOK){
                     if (move.from%8 == 0){
-                        board.wO_O = false;
-                    } else {
                         board.wO_O_O = false;
+                    } else {
+                        board.wO_O = false;
                     }
                 }
             } else {
@@ -246,9 +261,9 @@ public class brain {
                 }
                 if (move.pieceType == PieceType.ROOK){
                     if (move.from%8 == 0){
-                        board.bO_O = false;
-                    } else {
                         board.bO_O_O = false;
+                    } else {
+                        board.bO_O = false;
                     }
                 }
             }
@@ -276,9 +291,9 @@ public class brain {
                 }
                 if (move.pieceType == PieceType.ROOK){
                     if (move.from%8 == 0){
-                        board.wO_O = true;
-                    } else {
                         board.wO_O_O = true;
+                    } else {
+                        board.wO_O = true;
                     }
                 }
             } else {
@@ -288,9 +303,9 @@ public class brain {
                 }
                 if (move.pieceType == PieceType.ROOK){
                     if (move.from%8 == 0){
-                        board.bO_O = true;
-                    } else {
                         board.bO_O_O = true;
+                    } else {
+                        board.bO_O = true;
                     }
                 }
             }
@@ -302,27 +317,33 @@ public class brain {
     }
 
     public static ArrayList<Move> allLegalMoves(long whitePieces, long blackPieces, boolean white, Board board){
+        movesL.clear();
+        PmovesL.clear();
         long otherMoves = allPseudoLegalMovesBitBoard(whitePieces, blackPieces, white, board, true);
-        if (canSCastle(white, board, otherMoves)) {
-            movesL.add(new Move(-1, -1, PieceType.KING, -1, null, null, MoveType.SHORTCASTLE, true));
-        }
-        if (canLCastle(white, board, otherMoves)) {
-            movesL.add(new Move(-1, -1, PieceType.KING, -1, null, null, MoveType.LONGCASTLE, true));
-        }
+        addCastling(white, board);
+        
         for (Move move : PmovesL){
-            System.out.println("Trying move: " + move);
-            makeMove(move, white, board);
-            otherMoves = allPseudoLegalMovesBitBoard(whitePieces, blackPieces, !white, board, false);
-            printBitboard(otherMoves);
+            if (move.moveType != MoveType.SHORTCASTLE || move.moveType != MoveType.LONGCASTLE){
+                System.out.println("Trying move: " + move);
+                makeMove(move, white, board);
+                otherMoves = allPseudoLegalMovesBitBoard(board.whitePieces, board.blackPieces, !white, board, false);
+                //printBitboard(otherMoves);
 
-            if (isInCheck(white, otherMoves, board)){
-                System.out.println("Move: " + move + " causes self-check.");
-                unMove(move, white, board);
+                if (isInCheck(white, otherMoves, board)){
+                    //System.out.println("Move: " + move + " causes self-check.");
+                    unMove(move, white, board);
+                } else {
+                    //System.out.println("Move: " + move + " is clear.");
+                    movesL.add(move);
+                    unMove(move, white, board);
+                }
             } else {
-                System.out.println("Move: " + move + " is clear.");
-                movesL.add(move);
-                unMove(move, white, board);
+                //TODO: Handle castling. Change how castling works. Detected whether it's valid here instead of in the canCastle methods.
             }
+        }
+        //System.out.println(canLCastle(white, board, otherMoves, false));
+        for (Move move : movesL){
+            System.out.println(move);
         }
         return movesL;
     }

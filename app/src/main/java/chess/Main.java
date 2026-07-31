@@ -1,7 +1,13 @@
+/**
+ * Main
+ * The main engine for Thomas the Chess Engine
+ * @author Benjamin Kealey
+ * @version 0.0
+ */
+
 package chess;
 
 
-//TODO: Verify that captures really work. I think they do, but make sure.
 //TODO: Castling
 //TODO: En-passant
 //TODO: Stalemate
@@ -19,19 +25,19 @@ public class Main {
     int BASE_ROOK_VALUE = 5;
     int BASE_QUEEN_VALUE = 9;
 
-    long whitePawns = 0x0000000000000100L; // 
-    long whiteRooks = 0x0000000010000000L; // e4
+    long whitePawns = 0x0L; // 
+    long whiteRooks = 0x0000000000000081L; // a1 and h1
     long whiteKnights = 0x0L; // 
     long whiteBishops = 0x0L; // 
     long whiteQueens = 0x0L; // 
-    long whiteKing = 0x0000000000001000L; // e2
+    long whiteKing = 0x0000000000000010L; // e1
 
     long blackPawns = 0L;
-    long blackRooks = 0x1000000000000000L;
+    long blackRooks = 0x0100000000000000L; //
     long blackKnights = 0L;
     long blackBishops = 0L;
     long blackQueens = 0L;
-    long blackKing = 0x8000000000000000L; // h8
+    long blackKing = 0x1000000000000000L; // e8
     //long whitePawns = 0x000000000000FF00L; // starting position
     //long whiteRooks = 0x0000000000000081L; // starting position
     //long whiteKnights = 0x0000000000000042L; // starting position
