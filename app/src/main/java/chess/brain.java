@@ -156,16 +156,24 @@ public class brain {
         long king = board.getBitboard(PieceType.KING, white);
         long shortCastle = king << 1 | king << 2;
 
-        if (!(white? board.wO_O : board.bO_O)) return false; // if the player has already lost rights to O-O
+        if (!(white? board.wO_O : board.bO_O)){ 
+            System.out.println("no rigts short");
+            return false;} // if the player has already lost rights to O-O
 
-        if (isInCheck(white, otherMoves, board)) return false; // if the player is in check
+        if (isInCheck(white, otherMoves, board)){
+            System.out.println("in check short");
+            return false;} // if the player is in check
         
         // check for any piece (either colour) between king and rook
-        if ((shortCastle & (board.whitePieces | board.blackPieces)) != 0) return false; // if there are pieces between the king and the rook
+        if ((shortCastle & (board.whitePieces | board.blackPieces)) != 0){
+            System.out.println("no path short");
+            return false;} // if there are pieces between the king and the rook
         
-        if (((shortCastle & otherMoves) != 0)) return false; // if the player would castle through check
+        if (((shortCastle & otherMoves) != 0)) {
+            System.out.println("through check short");
+            return false;} // if the player would castle through check
 
-        if (list) PmovesL.add(new Move(0, 0, PieceType.KING, 0, null, null, MoveType.SHORTCASTLE, true));
+        if (list) PmovesL.add(new Move(white? 4 : 60, white? 6 : 62, PieceType.KING, 0, null, null, MoveType.SHORTCASTLE, true));
         System.out.println("clear???");
         return true;
     }
@@ -174,21 +182,23 @@ public class brain {
         long king = board.getBitboard(PieceType.KING, white);
         long longCastle = king >> 1 | king >> 2 | king >> 3;
         
-        if (!(white? board.wO_O_O : board.bO_O_O)) return false; // if the player has already lost rights to O-O
+        if (!(white? board.wO_O_O : board.bO_O_O)){ // if the player has already lost rights to O-O
+            System.out.println("no rights long");
+            return false;} // if the player has already lost rights to O-O
 
         if (isInCheck(white, otherMoves, board)){ 
-            System.out.println("is in check");
+            System.out.println("in check long");
             return false; }// if the player is in check
         
         if ((longCastle & (board.whitePieces | board.blackPieces)) != 0) {
-            System.out.println("blocked");
+            System.out.println("no path long");
             return false;} // if there are pieces between the king and the rook
         
         if (((longCastle & otherMoves) != 0)) {
-            System.out.println("through check");
+            System.out.println("through check long");
             return false;} // if the player would castle through check
 
-        if (list) PmovesL.add(new Move(0, 0, PieceType.KING, 0, null, null, MoveType.LONGCASTLE, true));
+        if (list) PmovesL.add(new Move(white? 4 : 60, white? 2 : 58, PieceType.KING, 0, null, null, MoveType.LONGCASTLE, true));
         System.out.println("clear??");
         return true;
     }
@@ -268,10 +278,28 @@ public class brain {
                 }
             }
         }
-
-        specificPieces &= ~(1L << move.from);
-        specificPieces |= 1L << move.to;
-        board.setBitboard(move.pieceType, specificPieces, white);
+        if (move.moveType == MoveType.SHORTCASTLE){
+            if (white){
+                board.setBitboard(PieceType.ROOK, (board.whiteRooks & ~(1L << 7)) | (1L << 5), true);
+                board.setBitboard(PieceType.KING, 1L << move.to, true);
+            } else {
+                board.setBitboard(PieceType.ROOK, (board.blackRooks & ~(1L << 63)) | (1L << 61), false);
+                board.setBitboard(PieceType.KING, 1L << move.to, false);
+            }
+        } else if (move.moveType == MoveType.LONGCASTLE){
+            if (white){
+                board.setBitboard(PieceType.ROOK, (board.whiteRooks & ~(1L << 0)) | (1L << 3), true);
+                board.setBitboard(PieceType.KING, 1L << move.to, true);
+            } else {
+                board.setBitboard(PieceType.ROOK, (board.blackRooks & ~(1L << 56)) | (1L << 59), false);
+                board.setBitboard(PieceType.KING, 1L << move.to, false);
+            }
+        } else {
+            specificPieces &= ~(1L << move.from);
+            specificPieces |= 1L << move.to;
+            board.setBitboard(move.pieceType, specificPieces, white);
+            //System.out.println("Made move: " + move);
+        }
     }
     /**
      * This methods assumes the move has already been made, and undoes it.
@@ -319,7 +347,8 @@ public class brain {
     public static ArrayList<Move> allLegalMoves(long whitePieces, long blackPieces, boolean white, Board board){
         movesL.clear();
         PmovesL.clear();
-        long otherMoves = allPseudoLegalMovesBitBoard(whitePieces, blackPieces, white, board, true);
+        long otherMoves;
+        allPseudoLegalMovesBitBoard(whitePieces, blackPieces, white, board, true);
         addCastling(white, board);
         
         for (Move move : PmovesL){
@@ -330,11 +359,15 @@ public class brain {
                 //printBitboard(otherMoves);
 
                 if (isInCheck(white, otherMoves, board)){
-                    //System.out.println("Move: " + move + " causes self-check.");
+                    System.out.println("Move: " + move + " causes self-check.");
+                    if (move.moveType == MoveType.SHORTCASTLE || move.moveType == MoveType.LONGCASTLE){
+                        printBitboard(board.getBitboard(PieceType.KING, white));
+                    }
                     unMove(move, white, board);
                 } else {
                     //System.out.println("Move: " + move + " is clear.");
                     movesL.add(move);
+                    //System.out.println("Added move: " + move);
                     unMove(move, white, board);
                 }
             } else {

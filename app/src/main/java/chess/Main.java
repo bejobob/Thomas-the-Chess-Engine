@@ -33,8 +33,8 @@ public class Main {
     long whiteKing = 0x0000000000000010L; // e1
 
     long blackPawns = 0L;
-    long blackRooks = 0x0100000000000000L; //
-    long blackKnights = 0L;
+    long blackRooks = 0x8000000000000000L; // e8
+    long blackKnights = 0x0200000000000000L;
     long blackBishops = 0L;
     long blackQueens = 0L;
     long blackKing = 0x1000000000000000L; // e8
