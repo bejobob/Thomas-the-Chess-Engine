@@ -7,13 +7,11 @@
 
 package chess;
 
-
-//TODO: Castling
-//TODO: En-passant
-//TODO: Stalemate
-//TODO: Threefold repetition
-//TODO: Checkmate
-//TODO: Finish writing javadoc for all my methods. Good to stay organized!
+// TODO: Change Game.java to include Board.java. The board is part of the game and it's cleaner to just have one state-of-the-game class.
+// TODO: Clean up brain.java.
+// TODO: Get to work on evaluating positions and moves
+// TODO: Move end-of-game stuff from brain.java to Main.java?
+// TODO: Finish writing javadoc for all my methods. Good to stay organized!
 
 import java.util.ArrayList;
 
@@ -70,6 +68,7 @@ public class Main {
 
     Board board = new Board(whitePawns, whiteRooks, whiteKnights, whiteBishops, whiteQueens, whiteKing,
             blackPawns, blackRooks, blackKnights, blackBishops, blackQueens, blackKing);
+    Game game = new Game();
 
     public static void main(String[] args) {
         Main app = new Main();
@@ -88,7 +87,7 @@ public class Main {
 
 
                 //System.out.println(square);
-                legalMovesL = brain.allLegalMoves(whitePieces, blackPieces, true, board);
+                legalMovesL = brain.allLegalMoves(whitePieces, blackPieces, true, board, game);
                 //System.out.println(legalMovesL.size());
                 for (Move move : legalMovesL){
                     //System.out.println(move.toAlgebraic(move));

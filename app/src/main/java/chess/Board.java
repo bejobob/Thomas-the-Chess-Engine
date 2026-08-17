@@ -94,4 +94,21 @@ public class Board {
 
         }
     }
+
+    public boolean equals(Board otherBoard){
+        if (this.whitePawns != otherBoard.whitePawns) return false;
+        if (this.blackPawns != otherBoard.whitePawns) return false;
+        if (this.whiteKnights != otherBoard.whiteKnights) return false;
+        if (this.blackKnights != otherBoard.whiteKnights) return false;
+        if (this.whiteBishops != otherBoard.whiteBishops) return false;
+        if (this.blackBishops != otherBoard.blackBishops) return false;
+        if (this.whiteRooks != otherBoard.whiteRooks) return false;
+        if (this.blackRooks != otherBoard.blackRooks) return false;
+        if (this.whiteQueens != otherBoard.whiteQueens) return false;
+        if (this.blackQueens != otherBoard.whiteQueens) return false;
+        if (this.whiteKing != otherBoard.whiteKing) return false;
+        if (this.blackKing != otherBoard.blackKing) return false;
+
+        return true;
+    }
 }

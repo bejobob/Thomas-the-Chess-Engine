@@ -9,11 +9,14 @@ package chess;
 
 import java.security.DrbgParameters.Capability;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 public class brain {
 
     private static ArrayList<Move> PmovesL = new ArrayList<>();
     private static ArrayList<Move> movesL = new ArrayList<>();
+    private static Map<Board,Integer> positions = new HashMap<>();
 
     /**
      * Checks if the current player is in check
@@ -116,7 +119,7 @@ public class brain {
      * @param white // is the current player white or black, referring to the colour of the pieces they are using and not that of their skin
      * @return a bitboard representing all the legal moves for the pawn on the given square
      */
-    public static long pawnMoves(int square, boolean white, Board board, boolean list) {
+    public static long pawnMoves(int square, boolean white, Board board, boolean list, Game game) {
         long otherPieces = white ? board.blackPieces : board.whitePieces;
         int forward = white ? 8 : -8;
         int leftCapture = white ? 7 : -9;
@@ -149,6 +152,25 @@ public class brain {
                 if (list) PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, rightCapture, captureType(rightCapture, white, board), null, MoveType.CAPTURE, false));
             }
         }
+        // from here I'm just doing en-passant stuff
+        Move lastMove = game.lastMove();
+        if (square/8 == (white ? 4 : 3)){ // if the pawn is a "brave pawn".
+            if (lastMove.pieceType == PieceType.PAWN){ // if the last move was not a pawn move, en-passant is not possible
+                if (lastMove.from/8 == (white? 6 : 1)){ // if the last move was from the starting position of a pawn
+                    if (lastMove.to/8 == (white? 4 : 3)){ // if the last move was to the "coward" row
+                        if (lastMove.to == square+1){ // if the pawn moved to the square to the right of the brave pawn
+                            moves |= 1L << (square+rightCapture);
+                            if (list) PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, PieceType.PAWN, null, MoveType.CAPTURE, false));
+
+                        } else if (lastMove.to == square-1){ // if the pawn moved to the square to the left of the brave pawn
+                            moves |= 1L << (square+leftCapture);
+                            if (list) PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, PieceType.PAWN, null, MoveType.CAPTURE, false));
+                        }
+                    }
+                }
+            }
+        }
+
         return moves;
     }
 
@@ -203,13 +225,42 @@ public class brain {
         return true;
     }
 
-    public static void addCastling(boolean white, Board board){
-        long otherMoves = allPseudoLegalMovesBitBoard(board.whitePieces, board.blackPieces, !white, board, false);
+    public static void addCastling(boolean white, Board board, Game game){
+        long otherMoves = allPseudoLegalMovesBitBoard(board.whitePieces, board.blackPieces, !white, board, false, game);
         System.out.println(canSCastle(white, board, otherMoves, true));
         System.out.println(canLCastle(white, board, otherMoves, true));
     }
 
     // END OF THE GENERATION OF PSEUDO-LEGAL MOVES //
+
+    // END-OF-GAME CHECKING //
+
+    public static boolean checkRepetition(Game game){
+        return game.threefoldRepetition(); // TODO: move this fully to brain.java? Or is this fine?
+    }
+
+    public static boolean stalemate(boolean white, long otherMoves, Board board, Game game){
+        if (isInCheck(white, otherMoves, board)) return false; // if the player is in check, then it isn't stalemate
+        if (allLegalMoves(board.whitePieces, board.blackPieces, white, board, game).size() != 0) return false; // if they have legal moves, then it isn't stalemate
+        return true; // if they are not in check and have no legal moves, then it is stalemate
+    }
+
+    public static boolean checkmate(boolean white, long otherMoves, Board board, Game game){
+        if (!isInCheck(white, otherMoves, board)) return false; // if the player is not in check, then it sure as heck isn't checkmate
+        if (allLegalMoves(board.whitePieces, board.blackPieces, white, board, game).size() != 0) return false; // if they have legal moves, then it isn't checkmate
+        return true; // if they are in check and have no legal moves, then it is checkmate
+    }
+
+    public static boolean fiftyMoves(Game game){
+        for (int i = game.getSelectedMoves().size() - 101; i < game.getSelectedMoves().size(); i++){ // in chess, 1 move is a move for both white and black. My moves are just one colour moving, so we need to go back 100 moves to really go back 50 moves. 101 to avoid range errors.
+            if (i < 0) return false; // if fewer than 50 moves have been played, then you can't have played 50 moves without a pawn move or capture
+            Move move = game.getSelectedMoves().get(i);
+            if (move.pieceType == PieceType.PAWN || move.captureType != null) return false; // if there has been a pawn move or a capture in the last 50 moves then the 50-move rule is not invoked
+        }
+        return true; // 50 moves without a pawn move or capture!
+    }
+
+    // END OF END-OF-GAME CHECKING //
 
     /**
      * Finds all the pseudo-legal moves
@@ -220,7 +271,7 @@ public class brain {
      * @param list whether we want to update the list of pseudo-legal moves or not. This is to avoid a concurrent modification error
      * @return a bitboard representing all the places !white could move to
      */
-    public static long allPseudoLegalMovesBitBoard(long whitePieces, long blackPieces, boolean white, Board board, boolean list) {
+    public static long allPseudoLegalMovesBitBoard(long whitePieces, long blackPieces, boolean white, Board board, boolean list, Game game) {
         long pieces = white? whitePieces : blackPieces;
         int square = 0;
         long moves = 0L;
@@ -229,7 +280,7 @@ public class brain {
 
             square = Long.numberOfTrailingZeros(pieces);
             if (((1L<<square) & board.getBitboard(PieceType.PAWN, white)) != 0){
-                moves |= pawnMoves(square, white, board, list);
+                moves |= pawnMoves(square, white, board, list, game);
             } else if (((1L<<square) & board.getBitboard(PieceType.KNIGHT, white)) != 0){
                 moves |= masterMoves(PieceType.KNIGHT, square, board, white, list);
             } else if (((1L<<square) & board.getBitboard(PieceType.BISHOP, white)) != 0){
@@ -344,18 +395,18 @@ public class brain {
         board.setBitboard(move.pieceType, specificPieces, white);
     }
 
-    public static ArrayList<Move> allLegalMoves(long whitePieces, long blackPieces, boolean white, Board board){
+    public static ArrayList<Move> allLegalMoves(long whitePieces, long blackPieces, boolean white, Board board, Game game){
         movesL.clear();
         PmovesL.clear();
         long otherMoves;
-        allPseudoLegalMovesBitBoard(whitePieces, blackPieces, white, board, true);
-        addCastling(white, board);
+        allPseudoLegalMovesBitBoard(whitePieces, blackPieces, white, board, true, game);
+        addCastling(white, board, game);
         
         for (Move move : PmovesL){
             if (move.moveType != MoveType.SHORTCASTLE || move.moveType != MoveType.LONGCASTLE){
                 System.out.println("Trying move: " + move);
                 makeMove(move, white, board);
-                otherMoves = allPseudoLegalMovesBitBoard(board.whitePieces, board.blackPieces, !white, board, false);
+                otherMoves = allPseudoLegalMovesBitBoard(board.whitePieces, board.blackPieces, !white, board, false, game);
                 //printBitboard(otherMoves);
 
                 if (isInCheck(white, otherMoves, board)){
