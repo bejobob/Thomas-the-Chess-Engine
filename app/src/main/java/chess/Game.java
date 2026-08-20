@@ -7,10 +7,13 @@ import java.util.ArrayList;
 public class Game {
     private ArrayList<Move> selectedMoves;
     private Map<Board, Integer> positions;
+    private Board board;
+    private boolean whiteToMove = true;
 
-    public Game(){
+    public Game(Board board){
         selectedMoves = new ArrayList<>();
         positions = new HashMap<>();
+        this.board = board;
     }
 
     /**
@@ -52,5 +55,13 @@ public class Game {
 
     public ArrayList<Move> getSelectedMoves() {
         return selectedMoves;
+    }
+
+    public Board getBoard() {
+        return board;
+    }
+
+    public boolean isWhiteToMove() {
+        return whiteToMove;
     }
 }

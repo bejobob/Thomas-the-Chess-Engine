@@ -2,7 +2,7 @@
  * PieceType
  * An ENUM for all the different piece types on a chess board
  * @author Benjamin Kealey
- * @version 2026/07/30
+ * @version 2026/08/20
  */
 
 package chess;

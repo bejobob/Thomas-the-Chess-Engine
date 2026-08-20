@@ -2,7 +2,7 @@
  * Move
  * A class representing a move on a chess board
  * @author Benjamin Kealey
- * @version 2026/07/20
+ * @version 2026/08/20
  */
 
 package chess;

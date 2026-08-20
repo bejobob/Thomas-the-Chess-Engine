@@ -2,7 +2,7 @@
  * Board
  * Represents the state of the chess board
  * @author Benjamin Kealey
- * @version 2026/07/30
+ * @version 2026/08/20
  */
 
 package chess;
