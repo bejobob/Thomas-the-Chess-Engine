@@ -26,6 +26,8 @@ public class Game {
      * @return the last move made so we can determine which piece was moved from where to where.
      */
     public Move lastMove(){
+        if (selectedMoves.size() == 0) return null;
+        else
         return selectedMoves.get(selectedMoves.size()-1);
     }
 

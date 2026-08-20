@@ -61,8 +61,9 @@ public class Move {
      * @return the algebraic representation of the move
      */
     public String toAlgebraic(Move move){
-        char x = (move.moveType == MoveType.CAPTURE || move.moveType == MoveType.CAPTURE_PROMOTION)? 'x' : '\0';
+        String x = "\0";
         char file = (char) ('a' + (move.to % 8));
+        String promotion = "\0";
         int rank = move.to / 8 + 1;
         //TODO: how to add "+" or "#" when the move causes a check
         if (move.moveType == MoveType.SHORTCASTLE){
@@ -71,7 +72,18 @@ public class Move {
         if (move.moveType == MoveType.LONGCASTLE){
             return "0-0-0";
         }
-        return move.pieceType.toString() + x + file + rank;
+        if (move.moveType == MoveType.CAPTURE || move.moveType == MoveType.CAPTURE_PROMOTION){
+            if (move.pieceType == PieceType.PAWN){
+                x = ((char) ('a' + (move.from % 8))) + "x";
+            } else {
+                x = "x";
+            }
+        }
+        
+        if (move.moveType == MoveType.PROMOTION || move.moveType == MoveType.CAPTURE_PROMOTION){
+            promotion = "=" + move.promotion.toString();
+        }
+        return move.pieceType.toString() + x + file + rank + promotion;
     }
 
     public String toString(){

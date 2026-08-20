@@ -127,27 +127,51 @@ public class brain {
         long moves = 0L;
 
         if ((!isOccupied(square+forward, board)) && (0 <= (square+forward) && (square+forward) < 64)) { // if the square ahead is unoccupied and is on the board
-            moves |= 1L << (square+forward);
-            if (list) PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, null, MoveType.MOVE, false));
+            if ((square + forward) / 8 == (white ? 7 : 0)) { // if the pawn is moving to the last rank
+                if (list) {
+                    PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.QUEEN, MoveType.PROMOTION, false));
+                    PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.ROOK, MoveType.PROMOTION, false));
+                    PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.BISHOP, MoveType.PROMOTION, false));
+                    PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.KNIGHT, MoveType.PROMOTION, false));
+                } // we don't update the bitboard here because pawns can't capture forwards, only diagonally
+            } else {
+                if (list) PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, null, MoveType.MOVE, false));
+            }
         }
         if ((square / 8 == (white ? 1 : 6)) && (!isOccupied(square+forward, board)) && (!isOccupied(square+2*forward, board) && (0 <= (square+2*forward) && (square+2*forward) < 64))) {
             moves |= 1L << (square+2*forward); // same as before, but for the first double-move
             if (list) PmovesL.add(new Move(square, square+2*forward, PieceType.PAWN, 0, null, null, MoveType.MOVE, false));
         }
         if ((otherPieces & (1L << (square+leftCapture))) != 0L) { // if there is a piece on the left capture square
-            if (0 > (square+leftCapture) || (square+leftCapture) >= 64) {
-                return moves; // if the capture is off the board. We return because we have already checked for going ahead and the double first move.
-            }
-            if (Math.abs((square % 8) - ((square + leftCapture) % 8)) > 1) { // if we aren't wrapping around the board
+            
+            if (Math.abs((square % 8) - ((square + leftCapture) % 8)) <= 1) { // if we aren't wrapping around the board
+                
+                if ((square + leftCapture) / 8 == (white ? 7 : 0)) { // if the pawn is moving to the last rank
+                    if (list) {
+                        PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, white, board), PieceType.QUEEN, MoveType.CAPTURE_PROMOTION, false));
+                        PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, white, board), PieceType.ROOK, MoveType.CAPTURE_PROMOTION, false));
+                        PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, white, board), PieceType.BISHOP, MoveType.CAPTURE_PROMOTION, false));
+                        PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, white, board), PieceType.KNIGHT, MoveType.CAPTURE_PROMOTION, false));
+                    }
+                } else {
+                    if (list) PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, white, board), null, MoveType.CAPTURE, false));
+                }
                 moves |= 1L << (square+leftCapture);
                 if (list) PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, leftCapture, captureType(leftCapture, white, board), null, MoveType.CAPTURE, false));
             }
         }
         if ((otherPieces & (1L << (square+rightCapture))) != 0L) { // ditto but on the right
-            if (0 > (square+rightCapture) || (square+rightCapture) >= 64) {
-                return moves;
-            }
-            if (Math.abs((square % 8) - ((square + rightCapture) % 8)) > 1) {
+            if (Math.abs((square % 8) - ((square + rightCapture) % 8)) <= 1) {
+                if ((square + rightCapture) / 8 == (white ? 7 : 0)) { // if the pawn is moving to the last rank
+                    if (list) {
+                        PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, white, board), PieceType.QUEEN, MoveType.CAPTURE_PROMOTION, false));
+                        PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, white, board), PieceType.ROOK, MoveType.CAPTURE_PROMOTION, false));
+                        PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, white, board), PieceType.BISHOP, MoveType.CAPTURE_PROMOTION, false));
+                        PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, white, board), PieceType.KNIGHT, MoveType.CAPTURE_PROMOTION, false));
+                    }
+                } else {
+                    if (list) PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, white, board), null, MoveType.CAPTURE, false));
+                }
                 moves |= 1L << (square+rightCapture);
                 if (list) PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, rightCapture, captureType(rightCapture, white, board), null, MoveType.CAPTURE, false));
             }
@@ -170,7 +194,6 @@ public class brain {
                 }
             }
         }
-
         return moves;
     }
 
@@ -179,24 +202,19 @@ public class brain {
         long shortCastle = king << 1 | king << 2;
 
         if (!(white? board.wO_O : board.bO_O)){ 
-            System.out.println("no rigts short");
             return false;} // if the player has already lost rights to O-O
 
         if (isInCheck(white, otherMoves, board)){
-            System.out.println("in check short");
             return false;} // if the player is in check
         
         // check for any piece (either colour) between king and rook
         if ((shortCastle & (board.whitePieces | board.blackPieces)) != 0){
-            System.out.println("no path short");
             return false;} // if there are pieces between the king and the rook
         
         if (((shortCastle & otherMoves) != 0)) {
-            System.out.println("through check short");
             return false;} // if the player would castle through check
 
         if (list) PmovesL.add(new Move(white? 4 : 60, white? 6 : 62, PieceType.KING, 0, null, null, MoveType.SHORTCASTLE, true));
-        System.out.println("clear???");
         return true;
     }
 
@@ -205,30 +223,25 @@ public class brain {
         long longCastle = king >> 1 | king >> 2 | king >> 3;
         
         if (!(white? board.wO_O_O : board.bO_O_O)){ // if the player has already lost rights to O-O
-            System.out.println("no rights long");
             return false;} // if the player has already lost rights to O-O
 
         if (isInCheck(white, otherMoves, board)){ 
-            System.out.println("in check long");
             return false; }// if the player is in check
         
         if ((longCastle & (board.whitePieces | board.blackPieces)) != 0) {
-            System.out.println("no path long");
             return false;} // if there are pieces between the king and the rook
         
         if (((longCastle & otherMoves) != 0)) {
-            System.out.println("through check long");
             return false;} // if the player would castle through check
 
         if (list) PmovesL.add(new Move(white? 4 : 60, white? 2 : 58, PieceType.KING, 0, null, null, MoveType.LONGCASTLE, true));
-        System.out.println("clear??");
         return true;
     }
 
     public static void addCastling(boolean white, Board board, Game game){
         long otherMoves = allPseudoLegalMovesBitBoard(board.whitePieces, board.blackPieces, !white, board, false, game);
-        System.out.println(canSCastle(white, board, otherMoves, true));
-        System.out.println(canLCastle(white, board, otherMoves, true));
+        canSCastle(white, board, otherMoves, true);
+        canLCastle(white, board, otherMoves, true);
     }
 
     // END OF THE GENERATION OF PSEUDO-LEGAL MOVES //
@@ -409,18 +422,11 @@ public class brain {
                 otherMoves = allPseudoLegalMovesBitBoard(board.whitePieces, board.blackPieces, !white, board, false, game);
                 //printBitboard(otherMoves);
 
-                if (isInCheck(white, otherMoves, board)){
-                    System.out.println("Move: " + move + " causes self-check.");
-                    if (move.moveType == MoveType.SHORTCASTLE || move.moveType == MoveType.LONGCASTLE){
-                        printBitboard(board.getBitboard(PieceType.KING, white));
-                    }
-                    unMove(move, white, board);
-                } else {
-                    //System.out.println("Move: " + move + " is clear.");
+                if (!isInCheck(white, otherMoves, board)){
                     movesL.add(move);
-                    //System.out.println("Added move: " + move);
-                    unMove(move, white, board);
                 }
+                unMove(move, white, board);
+
             } else {
                 //TODO: Handle castling. Change how castling works. Detected whether it's valid here instead of in the canCastle methods.
             }

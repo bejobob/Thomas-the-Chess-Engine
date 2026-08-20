@@ -23,7 +23,7 @@ public class Main {
     int BASE_ROOK_VALUE = 5;
     int BASE_QUEEN_VALUE = 9;
 
-    long whitePawns = 0x0L; // 
+    long whitePawns = 0x0001000000000000L; // a7
     long whiteRooks = 0x0000000000000081L; // a1 and h1
     long whiteKnights = 0x0L; // 
     long whiteBishops = 0x0L; // 
@@ -32,8 +32,8 @@ public class Main {
 
     long blackPawns = 0L;
     long blackRooks = 0x8000000000000000L; // e8
-    long blackKnights = 0x0200000000000000L;
-    long blackBishops = 0L;
+    long blackKnights = 0x0L;
+    long blackBishops = 0x0200000000000000L; // b8
     long blackQueens = 0L;
     long blackKing = 0x1000000000000000L; // e8
     //long whitePawns = 0x000000000000FF00L; // starting position
@@ -50,6 +50,70 @@ public class Main {
     //long blackBishops = 0x2400000000000000L; // starting position
     //long blackQueens = 0x0800000000000000L; // starting position
     //long blackKing = 0x1000000000000000L; // starting position
+
+    float[] pawnTable = {
+        0, 0, 0, 0, 0, 0, 0, 0,
+
+    };
+
+    float[] knightTable = {
+        -0.5f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.5f,
+
+        -0.4f, -0.2f,  0.0f,  0.0f,  0.0f,  0.0f, -0.2f, -0.4f,
+
+        -0.4f,  0.0f,  0.10f, 0.2f,  0.2f,  0.10f, 0.0f, -0.4f,
+
+        -0.4f,  0.0f,  0.2f,  0.25f, 0.25f, 0.2f,  0.0f, -0.4f,
+
+        -0.4f,  0.0f,  0.2f,  0.25f, 0.25f, 0.2f,  0.0f, -0.4f,
+
+        -0.4f,  0.0f,  0.10f, 0.2f,  0.2f,  0.10f, 0.0f, -0.4f,
+
+        -0.4f, -0.2f,  0.0f,  0.0f,  0.0f,  0.0f, -0.2f, -0.4f,
+
+        -0.5f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.5f,
+    };
+
+    float[] bishopTable = {
+        -0.1f, -0.1f, -0.25f, -0.25f, -0.25f, -0.25f, -0.1f, -0.1f,
+
+        -0.1f,  0.1f,  0.00f,  0.00f,  0.00f,  0.00f,  0.1f, -0.1f,
+
+        -0.25f, 0.0f,  0.20f,  0.20f,  0.20f,  0.20f,  0.0f, -0.25f,
+
+        -0.25f, 0.0f,  0.20f,  0.25f,  0.25f,  0.20f,  0.0f, -0.25f,
+
+        -0.25f, 0.0f,  0.20f,  0.25f,  0.25f,  0.20f,  0.0f, -0.25f,
+
+        -0.25f, 0.0f,  0.20f,  0.20f,  0.20f,  0.20f,  0.0f, -0.25f,
+
+        -0.1f,  0.1f,  0.00f,  0.00f,  0.00f,  0.00f,  0.1f, -0.1f,
+
+        -0.1f, -0.1f, -0.25f, -0.25f, -0.25f, -0.25f, -0.1f, -0.1f,
+    };
+
+    float[] rookTable = {
+        -0.10f, 0.15f, 0.15f, 0.15f, 0.15f, 0.15f, 0.15f, -0.10f,
+
+         0.25f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f, 0.25f,  0.25f,
+
+        -0.10f, 0.00f, 0.00f, 0.10f, 0.10f, 0.00f, 0.00f, -0.10f,
+
+         0.00f, 0.00f, 0.00f, 0.15f, 0.15f, 0.00f, 0.00f,  0.00f,
+
+         0.00f, 0.00f, 0.00f, 0.15f, 0.15f, 0.00f, 0.00f,  0.00f,
+
+        -0.10f, 0.00f, 0.10f, 0.25f, 0.25f, 0.10f, 0.00f, -0.10f,
+
+        -0.10f, 0.00f, 0.00f, 0.20f, 0.20f, 0.00f, 0.00f, -0.10f,
+
+        -0.20f,-0.10f, 0.00f, 0.20f, 0.20f, 0.00f,-0.10f, -0.20f,
+    };
+
+    float[] queenTable = {
+        
+    };
+
     long blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
     long whitePawnsCopy = whitePawns;
     long blackPawnsCopy = blackPawns;
