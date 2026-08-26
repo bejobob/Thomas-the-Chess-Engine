@@ -4,15 +4,16 @@
  * @author Benjamin Kealey
  * @version 2026/08/26
  */
-
 package chess;
+import java.util.Scanner;
+import java.util.ArrayList;
+
 
 // TODO: Clean up brain.java.
 // TODO: Get to work on evaluating positions and moves
 // TODO: Move end-of-game stuff from brain.java to Main.java?
 // TODO: Finish writing javadoc for all my methods. Good to stay organized!
 
-import java.util.ArrayList;
 
 public class Main {
 
@@ -40,22 +41,22 @@ public class Main {
 
 
     float[] pawnTable = {
-    0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,
+        0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,
 
-    0.05f,  0.10f,  0.10f, -0.05f, -0.05f,  0.10f,  0.10f,  0.05f,
+        0.05f,  0.10f,  0.10f, -0.05f, -0.05f,  0.10f,  0.10f,  0.05f,
 
-    0.05f,  0.05f,  0.10f,  0.20f,  0.20f,  0.10f,  0.05f,  0.05f,
+        0.05f,  0.05f,  0.10f,  0.20f,  0.20f,  0.10f,  0.05f,  0.05f,
 
-    0.00f,  0.00f,  0.10f,  0.25f,  0.25f,  0.10f,  0.00f,  0.00f,
+        0.00f,  0.00f,  0.10f,  0.25f,  0.25f,  0.10f,  0.00f,  0.00f,
 
-    0.00f,  0.00f,  0.05f,  0.20f,  0.20f,  0.05f,  0.00f,  0.00f,
+        0.00f,  0.00f,  0.05f,  0.20f,  0.20f,  0.05f,  0.00f,  0.00f,
 
-    0.05f, -0.05f, -0.10f,  0.00f,  0.00f, -0.10f, -0.05f,  0.05f,
+        0.05f, -0.05f, -0.10f,  0.00f,  0.00f, -0.10f, -0.05f,  0.05f,
 
-    0.05f,  0.05f,  0.05f, -0.10f, -0.10f,  0.05f,  0.05f,  0.05f,
+        0.05f,  0.05f,  0.05f, -0.10f, -0.10f,  0.05f,  0.05f,  0.05f,
 
-    0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f
-};
+        0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f
+    };
 
     float[] knightTable = {
         -0.5f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.5f,
@@ -150,6 +151,9 @@ public class Main {
     Board board = new Board(whitePawns, whiteRooks, whiteKnights, whiteBishops, whiteQueens, whiteKing,
             blackPawns, blackRooks, blackKnights, blackBishops, blackQueens, blackKing);
     Game game = new Game(board);
+    Scanner input = new Scanner(System.in);
+    ArrayList<Move> movesL = new ArrayList<>();
+    //brain brain = new brain();
 
     public static void main(String[] args) {
         Main app = new Main();
@@ -158,12 +162,34 @@ public class Main {
 
     public void run() {
         
-        // Example usage of the chess engine
-        // You can implement a simple command-line interface or GUI to interact with the engine
-        // For now, let's just evaluate the starting position
-        float evaluation = evaluate(game);
-        System.out.println("Evaluation of the starting position: " + evaluation);
-        
+        while (true) {
+            movesL = brain.allLegalMoves(game);
+            float evaluation = minimax(game, 2, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY);
+            System.out.println("Evaluation of the starting position: " + evaluation);
+            String userInput = input.nextLine();
+            int from = fromAlgebraic(userInput.substring(0, 2));
+            int to = fromAlgebraic(userInput.substring(2, 4));
+            Move move = pickMove(from, to);
+            if (move != null) {
+                brain.makeMove(move, game);
+                System.out.println("Move made: " + move.toAlgebraic(move));
+            } else {
+                System.out.println("Invalid move.");
+            }
+        }        
+    }
+    public int fromAlgebraic(String move){
+        int file = move.charAt(0) - 'a';
+        int rank = move.charAt(1) - '1';
+        return rank * 8 + file;
+    }
+    public Move pickMove(int from, int to){
+        for (Move move : movesL){
+            if (move.from == from && move.to == to){
+                return move;
+            }
+        }
+        return null;
     }
 
     public float evaluate(Game position){
@@ -280,12 +306,14 @@ public class Main {
     }
 
     public float minimax(Game position, int depth, float alpha, float beta){
+        movesL = brain.allLegalMoves(position);
         if (depth == 0 || brain.isGameOver(position, depth)){
             return evaluate(position);
         }
         if (position.isWhiteToMove()){
             float maxEval = Float.NEGATIVE_INFINITY;
-            for (Move move : brain.allLegalMoves(position)){
+            for (Move move : movesL){
+                System.out.println("Evaluating move: " + move.toAlgebraic(move));
                 brain.makeMove(move, position);
                 float eval = minimax(position, depth - 1, alpha, beta);
                 maxEval = Math.max(maxEval, eval);
@@ -298,7 +326,8 @@ public class Main {
             return maxEval;
         } else {
             float minEval = Float.POSITIVE_INFINITY;
-            for (Move move : brain.allLegalMoves(position)){
+            for (Move move : movesL){
+                System.out.println("Evaluating move: " + move.toAlgebraic(move));
                 brain.makeMove(move, position);
                 float eval = minimax(position, depth - 1, alpha, beta);
                 minEval = Math.min(minEval, eval);

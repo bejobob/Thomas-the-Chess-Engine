@@ -1,3 +1,10 @@
+/**
+ * Game
+ * Represents the state of the game including the board, the moves made, and whose turn it is.
+ * @author Benjamin Kealey
+ * @version 2026/08/26
+ */
+
 package chess;
 
 import java.util.Map;

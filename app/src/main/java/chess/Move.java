@@ -1,6 +1,6 @@
 /**
  * Move
- * A class representing a move on a chess board
+ * Represents a move made in a game of chess. Can also convert a move into algebraic notation.
  * @author Benjamin Kealey
  * @version 2026/08/20
  */
@@ -86,6 +86,9 @@ public class Move {
         return move.pieceType.toString() + x + file + rank + promotion;
     }
 
+
+
+    @Override
     public String toString(){
         return toAlgebraic(this);
     }

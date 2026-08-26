@@ -1,8 +1,8 @@
 /**
  * brain
- * Finds all the legal moves in a position
+ * Finds all the legal moves in a position and identifies when an end-of-game condition has been met.
  * @author Benjamin Kealey
- * @version 2026/08/20
+ * @version 2026/08/26
  */
 
 package chess;
