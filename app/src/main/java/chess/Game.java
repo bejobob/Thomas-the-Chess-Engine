@@ -30,8 +30,7 @@ public class Game {
      */
     public Move lastMove(){
         if (selectedMoves.size() == 0) return null;
-        else
-        return selectedMoves.get(selectedMoves.size()-1);
+        else return selectedMoves.get(selectedMoves.size()-1);
     }
 
     /**
@@ -63,5 +62,9 @@ public class Game {
 
     public boolean isWhiteToMove() {
         return whiteToMove;
+    }
+
+    public void changeTurn() {
+        whiteToMove = !whiteToMove;
     }
 }

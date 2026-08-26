@@ -168,7 +168,7 @@ public class brain {
         // from here I'm just doing en-passant stuff
         Move lastMove = game.lastMove();
         if (square/8 == (game.isWhiteToMove()? 4 : 3)){ // if the pawn is a "brave pawn".
-            if (lastMove.pieceType == PieceType.PAWN){ // if the last move was not a pawn move, en-passant is not possible
+            if (lastMove != null && lastMove.pieceType != PieceType.PAWN){ // if the last move was not a pawn move, en-passant is not possible
                 if (lastMove.from/8 == (game.isWhiteToMove()? 6 : 1)){ // if the last move was from the starting position of a pawn
                     if (lastMove.to/8 == (game.isWhiteToMove()? 4 : 3)){ // if the last move was to the "coward" row
                         if (lastMove.to == square+1){ // if the pawn moved to the square to the right of the brave pawn
@@ -260,8 +260,21 @@ public class brain {
      * @param game the game state. Includes the board and the turn.
      * @return whether the game has ended due to threefold repetition
      */
-    public static boolean checkRepetition(Game game){
-        return game.threefoldRepetition(); // TODO: move this fully to brain.java? Or is this fine?
+    public static float gameEnd(Game game, long otherMoves){
+        if (stalemate(otherMoves, game) || fiftyMoves(game)){
+            return 0.0f;
+        }
+        if (checkmate(otherMoves, game)){
+            return game.isWhiteToMove()? Float.POSITIVE_INFINITY : Float.NEGATIVE_INFINITY;
+        }
+        return 0.0f;
+    }
+
+    public static boolean isGameOver(Game game, long otherMoves){
+        if (stalemate(otherMoves, game) || fiftyMoves(game) || checkmate(otherMoves, game) || threefoldRepetition(game) || insufficientMaterial(game)){
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -300,6 +313,28 @@ public class brain {
             if (move.pieceType == PieceType.PAWN || move.captureType != null) return false; // if there has been a pawn move or a capture in the last 50 moves then the 50-move rule is not invoked
         }
         return true; // 50 moves without a pawn move or capture!
+    }
+
+    public static boolean threefoldRepetition(Game game){
+        if (game.threefoldRepetition()) return true;
+        return false;
+    }
+    public static boolean insufficientMaterial(Game game){
+        int whiteMaterial = 0;
+        int blackMaterial = 0;
+        Board board = game.getBoard();
+        whiteMaterial += Long.bitCount(board.whitePawns) * 1;
+        whiteMaterial += Long.bitCount(board.whiteKnights) * 3;
+        whiteMaterial += Long.bitCount(board.whiteBishops) * 3;
+        whiteMaterial += Long.bitCount(board.whiteRooks) * 5;
+        whiteMaterial += Long.bitCount(board.whiteQueens) * 9;
+        blackMaterial += Long.bitCount(board.blackPawns) * 1;
+        blackMaterial += Long.bitCount(board.blackKnights) * 3;
+        blackMaterial += Long.bitCount(board.blackBishops) * 3;
+        blackMaterial += Long.bitCount(board.blackRooks) * 5;
+        blackMaterial += Long.bitCount(board.blackQueens) * 9;
+        if ((whiteMaterial == 0 || whiteMaterial == 3) && (blackMaterial == 0 || blackMaterial == 3)) return true;
+        return false;
     }
 
     // END OF END-OF-GAME CHECKING //
@@ -393,6 +428,7 @@ public class brain {
             specificPieces |= 1L << move.to;
             game.getBoard().setBitboard(move.pieceType, specificPieces, game.isWhiteToMove());
         }
+        game.changeTurn();
     }
     /**
      * This methods assumes the move has already been made, and undoes it.
@@ -452,7 +488,7 @@ public class brain {
         
         for (Move move : PmovesL){
             if (move.moveType != MoveType.SHORTCASTLE || move.moveType != MoveType.LONGCASTLE){
-                System.out.println("Trying move: " + move);
+                //System.out.println("Trying move: " + move);
                 makeMove(move, game);
                 otherMoves = allPseudoLegalMovesBitBoard(game, false);
 
@@ -462,7 +498,7 @@ public class brain {
             }
         }
         for (Move move : movesL){
-            System.out.println(move);
+            //System.out.println(move);
         }
         return movesL;
     }

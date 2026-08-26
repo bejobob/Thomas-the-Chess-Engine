@@ -2,7 +2,7 @@
  * Main
  * The main engine for Thomas the Chess Engine
  * @author Benjamin Kealey
- * @version 2026/08/20
+ * @version 2026/08/26
  */
 
 package chess;
@@ -22,33 +22,22 @@ public class Main {
     int BASE_ROOK_VALUE = 5;
     int BASE_QUEEN_VALUE = 9;
 
-    long whitePawns = 0x0001000000000000L; // a7
-    long whiteRooks = 0x0000000000000081L; // a1 and h1
-    long whiteKnights = 0x0L; // 
-    long whiteBishops = 0x0L; // 
-    long whiteQueens = 0x0L; // 
-    long whiteKing = 0x0000000000000010L; // e1
-
-    long blackPawns = 0L;
-    long blackRooks = 0x8000000000000000L; // e8
-    long blackKnights = 0x0L;
-    long blackBishops = 0x0200000000000000L; // b8
-    long blackQueens = 0L;
-    long blackKing = 0x1000000000000000L; // e8
-    //long whitePawns = 0x000000000000FF00L; // starting position
-    //long whiteRooks = 0x0000000000000081L; // starting position
-    //long whiteKnights = 0x0000000000000042L; // starting position
-    //long whiteBishops = 0x0000000000000024L; // starting position
-    //long whiteQueens = 0x0000000000000008L; // starting position
-    //long whiteKing = 0x0000000000000010L; // starting position
+    long whitePawns = 0x000000000000FF00L; // starting position
+    long whiteRooks = 0x0000000000000081L; // starting position
+    long whiteKnights = 0x0000000000000042L; // starting position
+    long whiteBishops = 0x0000000000000024L; // starting position
+    long whiteQueens = 0x0000000000000008L; // starting position
+    long whiteKing = 0x0000000000000010L; // starting position
     long whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
 
-    //long blackPawns = 0x00FF000000000000L; // starting position
-    //long blackRooks = 0x8100000000000000L; // starting position
-    //long blackKnights = 0x4200000000000000L; // starting position
-    //long blackBishops = 0x2400000000000000L; // starting position
-    //long blackQueens = 0x0800000000000000L; // starting position
-    //long blackKing = 0x1000000000000000L; // starting position
+    long blackPawns = 0x00FF000000000000L; // starting position
+    long blackRooks = 0x8100000000000000L; // starting position
+    long blackKnights = 0x4200000000000000L; // starting position
+    long blackBishops = 0x2400000000000000L; // starting position
+    long blackQueens = 0x0800000000000000L; // starting position
+    long blackKing = 0x1000000000000000L; // starting position
+    long blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
+
 
     float[] pawnTable = {
     0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,
@@ -158,22 +147,6 @@ public class Main {
         0.20f,  0.30f,  0.10f,  0.00f,  0.00f,  0.10f,  0.30f,  0.20f
     };
 
-    long blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
-    long whitePawnsCopy = whitePawns;
-    long blackPawnsCopy = blackPawns;
-    long whiteRooksCopy = whiteRooks;
-    long blackRooksCopy = blackRooks;
-    long whiteKnightsCopy = whiteKnights;
-    long blackKnightsCopy = blackKnights;
-    long whiteBishopsCopy = whiteBishops;
-    long blackBishopsCopy = blackBishops;
-    long whiteQueensCopy = whiteQueens;
-    long blackQueensCopy = blackQueens;
-    long whiteKingCopy = whiteKing;
-    long blackKingCopy = blackKing;
-    long[] whitePiecesCopy = {whitePawnsCopy, whiteRooksCopy, whiteKnightsCopy, whiteBishopsCopy, whiteQueensCopy, whiteKingCopy};
-    long [] blackPiecesCopy = {blackPawnsCopy, blackRooksCopy, blackKnightsCopy, blackBishopsCopy, blackQueensCopy, blackKingCopy};
-
     Board board = new Board(whitePawns, whiteRooks, whiteKnights, whiteBishops, whiteQueens, whiteKing,
             blackPawns, blackRooks, blackKnights, blackBishops, blackQueens, blackKing);
     Game game = new Game(board);
@@ -184,29 +157,23 @@ public class Main {
     }
 
     public void run() {
-        whiteMoves();
         
-    }
-    
-    public ArrayList<Move> whiteMoves(){
-        ArrayList<Move> legalMovesL = new ArrayList<>();
-
-            //System.out.printf("%016X%n", group);
-
-
-                //System.out.println(square);
-                legalMovesL = brain.allLegalMoves(game);
-                //System.out.println(legalMovesL.size());
-                for (Move move : legalMovesL){
-                    //System.out.println(move.toAlgebraic(move));
-                }            
-                
-            
+        // Example usage of the chess engine
+        // You can implement a simple command-line interface or GUI to interact with the engine
+        // For now, let's just evaluate the starting position
+        float evaluation = evaluate(game);
+        System.out.println("Evaluation of the starting position: " + evaluation);
         
-        return legalMovesL;
     }
 
     public float evaluate(Game position){
+        float score = 0.0f;
+        if (brain.isGameOver(position, brain.allPseudoLegalMovesBitBoard(position, false))){
+            return brain.gameEnd(position, brain.allPseudoLegalMovesBitBoard(position, false));
+        }
+        Board board = position.getBoard();
+        score += materialScore(board);
+        score += placementScore(board);
         /*
         score = 
         materialScore +
@@ -214,7 +181,7 @@ public class Main {
         mobilityScore +
         kingSafetyScore
         */
-        return 0.0f;
+        return score;
     }
 
     public float materialScore(Board board){
@@ -310,5 +277,38 @@ public class Main {
         }
         return score;
 
+    }
+
+    public float minimax(Game position, int depth, float alpha, float beta){
+        if (depth == 0 || brain.isGameOver(position, depth)){
+            return evaluate(position);
+        }
+        if (position.isWhiteToMove()){
+            float maxEval = Float.NEGATIVE_INFINITY;
+            for (Move move : brain.allLegalMoves(position)){
+                brain.makeMove(move, position);
+                float eval = minimax(position, depth - 1, alpha, beta);
+                maxEval = Math.max(maxEval, eval);
+                alpha = Math.max(alpha, eval);
+                brain.unMove(move, position);
+                if (beta <= alpha){
+                    break;
+                }
+            }
+            return maxEval;
+        } else {
+            float minEval = Float.POSITIVE_INFINITY;
+            for (Move move : brain.allLegalMoves(position)){
+                brain.makeMove(move, position);
+                float eval = minimax(position, depth - 1, alpha, beta);
+                minEval = Math.min(minEval, eval);
+                beta = Math.min(beta, eval);
+                brain.unMove(move, position);
+                if (beta <= alpha){
+                    break;
+                }
+            }
+            return minEval;
+        }
     }
 }

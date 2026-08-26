@@ -1,8 +1,8 @@
 /**
  * Board
- * Represents the state of the chess board
+ * Represents a chess board with all the pieces on it. Can also calculate how much material each player has left.
  * @author Benjamin Kealey
- * @version 2026/08/20
+ * @version 2026/08/26
  */
 
 package chess;
