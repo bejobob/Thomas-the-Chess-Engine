@@ -87,12 +87,8 @@ public class Board {
                 break;
         }
         
-        if (white){
-            whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
-        } else {
-            blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
-
-        }
+        whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
+        blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
     }
 
     public boolean equals(Board otherBoard){
@@ -111,4 +107,55 @@ public class Board {
 
         return true;
     }
+
+    public void printBoard(Board board) {
+    System.out.println("  +-----------------+");
+
+    for (int rank = 7; rank >= 0; rank--) {
+        System.out.print((rank + 1) + " | ");
+
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            long bit = 1L << square;
+
+            char piece = '.';
+
+            // White pieces
+            if ((board.whitePawns & bit) != 0) {
+                piece = 'P';
+            } else if ((board.whiteKnights & bit) != 0) {
+                piece = 'N';
+            } else if ((board.whiteBishops & bit) != 0) {
+                piece = 'B';
+            } else if ((board.whiteRooks & bit) != 0) {
+                piece = 'R';
+            } else if ((board.whiteQueens & bit) != 0) {
+                piece = 'Q';
+            } else if ((board.whiteKing & bit) != 0) {
+                piece = 'K';
+
+            // Black pieces
+            } else if ((board.blackPawns & bit) != 0) {
+                piece = 'p';
+            } else if ((board.blackKnights & bit) != 0) {
+                piece = 'n';
+            } else if ((board.blackBishops & bit) != 0) {
+                piece = 'b';
+            } else if ((board.blackRooks & bit) != 0) {
+                piece = 'r';
+            } else if ((board.blackQueens & bit) != 0) {
+                piece = 'q';
+            } else if ((board.blackKing & bit) != 0) {
+                piece = 'k';
+            }
+
+            System.out.print(piece + " ");
+        }
+
+        System.out.println("|");
+    }
+
+    System.out.println("  +-----------------+");
+    System.out.println("    a b c d e f g h");
+}
 }

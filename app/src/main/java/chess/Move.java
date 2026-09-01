@@ -12,6 +12,7 @@ public class Move {
     int to;
     MoveType moveType;
     boolean breaksCastle;
+    boolean white;
 
     // these are optional fields:
     int captureOn;
@@ -28,13 +29,15 @@ public class Move {
      * @param promotion the type of piece that a pawn is promoting to
      * @param moveType the type of move
      * @param breaksCastle whether or not this move breaks castling rights.
+     * @param white whether the move belongs to the white player or the black player
      */
-    public Move(int from, int to, PieceType pieceType, int captureOn, PieceType captureType, PieceType promotion, MoveType moveType, boolean breaksCastle){
+    public Move(int from, int to, PieceType pieceType, int captureOn, PieceType captureType, PieceType promotion, MoveType moveType, boolean breaksCastle, boolean white){
         this.from = from;
         this.to = to;
         this.pieceType = pieceType;
         this.breaksCastle = breaksCastle;
         this.moveType = moveType;
+        this.white = white;
         switch (moveType) {
             case CAPTURE:
                 this.captureOn = captureOn;
@@ -65,6 +68,8 @@ public class Move {
         char file = (char) ('a' + (move.to % 8));
         String promotion = "\0";
         int rank = move.to / 8 + 1;
+        char filefrom = (char) ('a' + (move.from % 8));
+        int rankfrom = move.from / 8 + 1;
         //TODO: how to add "+" or "#" when the move causes a check
         if (move.moveType == MoveType.SHORTCASTLE){
             return "0-0";
@@ -83,7 +88,8 @@ public class Move {
         if (move.moveType == MoveType.PROMOTION || move.moveType == MoveType.CAPTURE_PROMOTION){
             promotion = "=" + move.promotion.toString();
         }
-        return move.pieceType.toString() + x + file + rank + promotion;
+        //return move.pieceType.toString() + x + file + rank + promotion;
+        return move.pieceType.toString() + " " + filefrom + rankfrom + file + rank;
     }
 
 

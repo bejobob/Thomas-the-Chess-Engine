@@ -7,16 +7,12 @@
 
 package chess;
 
-import java.security.DrbgParameters.Capability;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
 
-public class brain {
+public class Brain {
 
-    private static ArrayList<Move> PmovesL = new ArrayList<>();
-    private static ArrayList<Move> movesL = new ArrayList<>();
-    private static Map<Board,Integer> positions = new HashMap<>();
+    private static ArrayList<Move> pseudoLegalMoves = new ArrayList<>();
+    private static ArrayList<Move> legalMoves = new ArrayList<>();
 
     /**
      * Checks if the current player is in check
@@ -24,7 +20,7 @@ public class brain {
      * @param game the game state. Includes the board and the turn.
      * @return boolean, whether the current player is in check or not
      */
-    public static boolean isInCheck(long otherMoves,  Game game){
+    public static boolean isInCheck(long otherMoves, Game game){
         long moves = otherMoves;
         long king = game.isWhiteToMove() ? game.getBoard().whiteKing : game.getBoard().blackKing;
         return (king & moves) != 0L;
@@ -75,6 +71,7 @@ public class brain {
         int[] offsets = Offsets.getOffsets(pieceType);
         int itter = Offsets.getItter(pieceType);
         long moves = 0L;
+        boolean white = game.isWhiteToMove();
         for (int offset : offsets){
             for (int i = 1; i <= itter; i++){
                 
@@ -84,17 +81,17 @@ public class brain {
                 if (Math.abs((square + offset*i)%8-(square + offset*(i-1))%8) > 2){ // if we wrap around the game.getBoard(). I say 2 to permit knights to move properly
                     break;
                 }
-                if (((game.isWhiteToMove()? game.getBoard().whitePieces : game.getBoard().blackPieces) & (1L << (square + offset*i))) != 0){ // if the target square contains a friendly piece
+                if (((white? game.getBoard().whitePieces : game.getBoard().blackPieces) & (1L << (square + offset*i))) != 0){ // if the target square contains a friendly piece
                     break;
                 }
                 boolean breaksCastle = (pieceType == PieceType.KING || pieceType == PieceType.ROOK);
-                if (((game.isWhiteToMove()? game.getBoard().blackPieces : game.getBoard().whitePieces) & (1L << (square + offset*i))) != 0){ // if the target square contains an enemy piece, add the possible move to the move list, and then break
+                if (((white? game.getBoard().blackPieces : game.getBoard().whitePieces) & (1L << (square + offset*i))) != 0){ // if the target square contains an enemy piece, add the possible move to the move list, and then break
                     PieceType captured = captureType(1L << (square + offset*i), game);
-                    if (list) PmovesL.add(new Move(square, square+offset*i, pieceType, square+offset*i, captured, null, MoveType.CAPTURE, breaksCastle));
+                    if (list) pseudoLegalMoves.add(new Move(square, square+offset*i, pieceType, square+offset*i, captured, null, MoveType.CAPTURE, breaksCastle, game.isWhiteToMove()));
                     moves |= 1l << square+offset*i;
                     break;
                 }
-                if (list) PmovesL.add(new Move(square, square+offset*i, pieceType, 0, null, null, MoveType.MOVE, breaksCastle));
+                if (list) pseudoLegalMoves.add(new Move(square, square+offset*i, pieceType, 0, null, null, MoveType.MOVE, breaksCastle, white));
                 moves |= 1L << square+offset*i;
             }
         }
@@ -114,70 +111,71 @@ public class brain {
         int leftCapture = game.isWhiteToMove()? 7 : -9;
         int rightCapture = game.isWhiteToMove()? 9 : -7;
         long moves = 0L;
+        boolean white = game.isWhiteToMove();
 
         if ((!isOccupied(square+forward, game)) && (0 <= (square+forward) && (square+forward) < 64)) { // if the square ahead is unoccupied and is on the board
-            if ((square + forward) / 8 == (game.isWhiteToMove()? 7 : 0)) { // if the pawn is moving to the last rank
+            if ((square + forward) / 8 == (white? 7 : 0)) { // if the pawn is moving to the last rank
                 if (list) {
-                    PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.QUEEN, MoveType.PROMOTION, false));
-                    PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.ROOK, MoveType.PROMOTION, false));
-                    PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.BISHOP, MoveType.PROMOTION, false));
-                    PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.KNIGHT, MoveType.PROMOTION, false));
+                    pseudoLegalMoves.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.QUEEN, MoveType.PROMOTION, false, white));
+                    pseudoLegalMoves.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.ROOK, MoveType.PROMOTION, false, white));
+                    pseudoLegalMoves.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.BISHOP, MoveType.PROMOTION, false, white));
+                    pseudoLegalMoves.add(new Move(square, square+forward, PieceType.PAWN, 0, null, PieceType.KNIGHT, MoveType.PROMOTION, false, white));
                 } // we don't update the bitboard here because pawns can't capture forwards, only diagonally
             } else {
-                if (list) PmovesL.add(new Move(square, square+forward, PieceType.PAWN, 0, null, null, MoveType.MOVE, false));
+                if (list) pseudoLegalMoves.add(new Move(square, square+forward, PieceType.PAWN, 0, null, null, MoveType.MOVE, false, white));
             }
         }
-        if ((square / 8 == (game.isWhiteToMove()? 1 : 6)) && (!isOccupied(square+forward, game)) && (!isOccupied(square+2*forward, game) && (0 <= (square+2*forward) && (square+2*forward) < 64))) {
+        if ((square / 8 == (white? 1 : 6)) && (!isOccupied(square+forward, game)) && (!isOccupied(square+2*forward, game) && (0 <= (square+2*forward) && (square+2*forward) < 64))) {
             moves |= 1L << (square+2*forward); // same as before, but for the first double-move
-            if (list) PmovesL.add(new Move(square, square+2*forward, PieceType.PAWN, 0, null, null, MoveType.MOVE, false));
+            if (list) pseudoLegalMoves.add(new Move(square, square+2*forward, PieceType.PAWN, 0, null, null, MoveType.MOVE, false, white));
         }
         if ((otherPieces & (1L << (square+leftCapture))) != 0L) { // if there is a piece on the left capture square
             
             if (Math.abs((square % 8) - ((square + leftCapture) % 8)) <= 1) { // if we aren't wrapping around the board
                 
-                if ((square + leftCapture) / 8 == (game.isWhiteToMove()? 7 : 0)) { // if the pawn is moving to the last rank
+                if ((square + leftCapture) / 8 == (white? 7 : 0)) { // if the pawn is moving to the last rank
                     if (list) {
-                        PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, game), PieceType.QUEEN, MoveType.CAPTURE_PROMOTION, false));
-                        PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, game), PieceType.ROOK, MoveType.CAPTURE_PROMOTION, false));
-                        PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, game), PieceType.BISHOP, MoveType.CAPTURE_PROMOTION, false));
-                        PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, game), PieceType.KNIGHT, MoveType.CAPTURE_PROMOTION, false));
+                        pseudoLegalMoves.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, game), PieceType.QUEEN, MoveType.CAPTURE_PROMOTION, false, white));
+                        pseudoLegalMoves.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, game), PieceType.ROOK, MoveType.CAPTURE_PROMOTION, false, white));
+                        pseudoLegalMoves.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, game), PieceType.BISHOP, MoveType.CAPTURE_PROMOTION, false, white));
+                        pseudoLegalMoves.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, game), PieceType.KNIGHT, MoveType.CAPTURE_PROMOTION, false, white));
                     }
                 } else {
-                    if (list) PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, game), null, MoveType.CAPTURE, false));
+                    if (list) pseudoLegalMoves.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, captureType(leftCapture, game), null, MoveType.CAPTURE, false, white));
                 }
                 moves |= 1L << (square+leftCapture);
-                if (list) PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, leftCapture, captureType(leftCapture, game), null, MoveType.CAPTURE, false));
+                if (list) pseudoLegalMoves.add(new Move(square, square+leftCapture, PieceType.PAWN, leftCapture, captureType(leftCapture, game), null, MoveType.CAPTURE, false, white));
             }
         }
         if ((otherPieces & (1L << (square+rightCapture))) != 0L) { // ditto but on the right
             if (Math.abs((square % 8) - ((square + rightCapture) % 8)) <= 1) {
-                if ((square + rightCapture) / 8 == (game.isWhiteToMove()? 7 : 0)) { // if the pawn is moving to the last rank
+                if ((square + rightCapture) / 8 == (white? 7 : 0)) { // if the pawn is moving to the last rank
                     if (list) {
-                        PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, game), PieceType.QUEEN, MoveType.CAPTURE_PROMOTION, false));
-                        PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, game), PieceType.ROOK, MoveType.CAPTURE_PROMOTION, false));
-                        PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, game), PieceType.BISHOP, MoveType.CAPTURE_PROMOTION, false));
-                        PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, game), PieceType.KNIGHT, MoveType.CAPTURE_PROMOTION, false));
+                        pseudoLegalMoves.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, game), PieceType.QUEEN, MoveType.CAPTURE_PROMOTION, false, white));
+                        pseudoLegalMoves.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, game), PieceType.ROOK, MoveType.CAPTURE_PROMOTION, false, white));
+                        pseudoLegalMoves.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, game), PieceType.BISHOP, MoveType.CAPTURE_PROMOTION, false, white));
+                        pseudoLegalMoves.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, game), PieceType.KNIGHT, MoveType.CAPTURE_PROMOTION, false, white));
                     }
                 } else {
-                    if (list) PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, game), null, MoveType.CAPTURE, false));
+                    if (list) pseudoLegalMoves.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, captureType(rightCapture, game), null, MoveType.CAPTURE, false, white));
                 }
                 moves |= 1L << (square+rightCapture);
-                if (list) PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, rightCapture, captureType(rightCapture, game), null, MoveType.CAPTURE, false));
+                if (list) pseudoLegalMoves.add(new Move(square, square+rightCapture, PieceType.PAWN, rightCapture, captureType(rightCapture, game), null, MoveType.CAPTURE, false, white));
             }
         }
         // from here I'm just doing en-passant stuff
         Move lastMove = game.lastMove();
-        if (square/8 == (game.isWhiteToMove()? 4 : 3)){ // if the pawn is a "brave pawn".
+        if (square/8 == (white? 4 : 3)){ // if the pawn is a "brave pawn".
             if (lastMove != null && lastMove.pieceType != PieceType.PAWN){ // if the last move was not a pawn move, en-passant is not possible
-                if (lastMove.from/8 == (game.isWhiteToMove()? 6 : 1)){ // if the last move was from the starting position of a pawn
-                    if (lastMove.to/8 == (game.isWhiteToMove()? 4 : 3)){ // if the last move was to the "coward" row
+                if (lastMove.from/8 == (white? 6 : 1)){ // if the last move was from the starting position of a pawn
+                    if (lastMove.to/8 == (white? 4 : 3)){ // if the last move was to the "coward" row
                         if (lastMove.to == square+1){ // if the pawn moved to the square to the right of the brave pawn
                             moves |= 1L << (square+rightCapture);
-                            if (list) PmovesL.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, PieceType.PAWN, null, MoveType.CAPTURE, false));
+                            if (list) pseudoLegalMoves.add(new Move(square, square+rightCapture, PieceType.PAWN, square+rightCapture, PieceType.PAWN, null, MoveType.CAPTURE, false, white));
 
                         } else if (lastMove.to == square-1){ // if the pawn moved to the square to the left of the brave pawn
                             moves |= 1L << (square+leftCapture);
-                            if (list) PmovesL.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, PieceType.PAWN, null, MoveType.CAPTURE, false));
+                            if (list) pseudoLegalMoves.add(new Move(square, square+leftCapture, PieceType.PAWN, square+leftCapture, PieceType.PAWN, null, MoveType.CAPTURE, false, white));
                         }
                     }
                 }
@@ -196,8 +194,9 @@ public class brain {
     public static boolean canSCastle(Game game, long otherMoves, boolean list){
         long king = game.getBoard().getBitboard(PieceType.KING, game.isWhiteToMove());
         long shortCastle = king << 1 | king << 2;
+        boolean white = game.isWhiteToMove();
 
-        if (!(game.isWhiteToMove()? game.getBoard().wO_O : game.getBoard().bO_O)){ 
+        if (!(white? game.getBoard().wO_O : game.getBoard().bO_O)){ 
             return false;} // if the player has already lost rights to O-O
 
         if (isInCheck(otherMoves, game)){
@@ -210,7 +209,7 @@ public class brain {
         if (((shortCastle & otherMoves) != 0)) {
             return false;} // if the player would castle through check
 
-        if (list) PmovesL.add(new Move(game.isWhiteToMove()? 4 : 60, game.isWhiteToMove()? 6 : 62, PieceType.KING, 0, null, null, MoveType.SHORTCASTLE, true));
+        if (list) pseudoLegalMoves.add(new Move(game.isWhiteToMove()? 4 : 60, game.isWhiteToMove()? 6 : 62, PieceType.KING, 0, null, null, MoveType.SHORTCASTLE, true, white));
         return true;
     }
 
@@ -224,8 +223,9 @@ public class brain {
     public static boolean canLCastle(Game game, long otherMoves, boolean list) {
         long king = game.getBoard().getBitboard(PieceType.KING, game.isWhiteToMove());
         long longCastle = king >> 1 | king >> 2 | king >> 3;
+        boolean white = game.isWhiteToMove();
         
-        if (!(game.isWhiteToMove()? game.getBoard().wO_O_O : game.getBoard().bO_O_O)){ // if the player has already lost rights to O-O
+        if (!(white? game.getBoard().wO_O_O : game.getBoard().bO_O_O)){ // if the player has already lost rights to O-O
             return false;} // if the player has already lost rights to O-O
 
         if (isInCheck(otherMoves, game)){ 
@@ -237,7 +237,7 @@ public class brain {
         if (((longCastle & otherMoves) != 0)) {
             return false;} // if the player would castle through check
 
-        if (list) PmovesL.add(new Move(game.isWhiteToMove()? 4 : 60, game.isWhiteToMove()? 2 : 58, PieceType.KING, 0, null, null, MoveType.LONGCASTLE, true));
+        if (list) pseudoLegalMoves.add(new Move(white? 4 : 60, white? 2 : 58, PieceType.KING, 0, null, null, MoveType.LONGCASTLE, true, white));
         return true;
     }
 
@@ -255,11 +255,7 @@ public class brain {
 
     // END-OF-GAME CHECKING //
 
-    /**
-     * Determines whether the game has ended due to threefold repetition
-     * @param game the game state. Includes the board and the turn.
-     * @return whether the game has ended due to threefold repetition
-     */
+
     public static float gameEnd(Game game, long otherMoves){
         if (stalemate(otherMoves, game) || fiftyMoves(game)){
             return 0.0f;
@@ -314,11 +310,16 @@ public class brain {
         }
         return true; // 50 moves without a pawn move or capture!
     }
-
+    /**
+     * Determines whether the game has ended due to threefold repetition
+     * @param game the game state. Includes the board and the turn.
+     * @return whether the game has ended due to threefold repetition
+     */
     public static boolean threefoldRepetition(Game game){
         if (game.threefoldRepetition()) return true;
         return false;
     }
+
     public static boolean insufficientMaterial(Game game){
         int whiteMaterial = 0;
         int blackMaterial = 0;
@@ -377,6 +378,7 @@ public class brain {
      */
     public static void makeMove(Move move, Game game){
         long specificPieces = game.getBoard().getBitboard(move.pieceType, game.isWhiteToMove());
+
         if (move.captureType != null){
             game.getBoard().setBitboard(move.captureType, game.getBoard().getBitboard(move.captureType, !game.isWhiteToMove()) & ~(1L << move.captureOn), !game.isWhiteToMove());
         }
@@ -428,7 +430,6 @@ public class brain {
             specificPieces |= 1L << move.to;
             game.getBoard().setBitboard(move.pieceType, specificPieces, game.isWhiteToMove());
         }
-        game.changeTurn();
     }
     /**
      * This methods assumes the move has already been made, and undoes it.
@@ -480,28 +481,29 @@ public class brain {
      * @return a list of all the legal moves for the current player
      */
     public static ArrayList<Move> allLegalMoves(Game game){
-        movesL.clear();
-        PmovesL.clear();
+        legalMoves.clear();
+        pseudoLegalMoves.clear();
         long otherMoves;
         allPseudoLegalMovesBitBoard(game, true);
         addCastling(game);
         
-        for (Move move : PmovesL){
+        for (Move move : pseudoLegalMoves){
             if (move.moveType != MoveType.SHORTCASTLE || move.moveType != MoveType.LONGCASTLE){
                 //System.out.println("Trying move: " + move);
                 makeMove(move, game);
                 otherMoves = allPseudoLegalMovesBitBoard(game, false);
 
-                if (!isInCheck(otherMoves, game)) movesL.add(move);
+                if (!isInCheck(otherMoves, game)) legalMoves.add(move);
                 
                 unMove(move, game);
             }
         }
-        for (Move move : movesL){
-            //System.out.println(move);
-        }
-        return movesL;
+        return legalMoves;
     }
+
+
+// UTILITY METHODS //
+
 
     /**
      * Prints the given bitboard row by row
@@ -515,5 +517,9 @@ public class brain {
             }
             System.out.println();
         }
+    }
+
+    public static ArrayList<Move> getMoves(){
+        return legalMoves;
     }
 }

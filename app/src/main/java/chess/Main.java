@@ -152,8 +152,8 @@ public class Main {
             blackPawns, blackRooks, blackKnights, blackBishops, blackQueens, blackKing);
     Game game = new Game(board);
     Scanner input = new Scanner(System.in);
-    ArrayList<Move> movesL = new ArrayList<>();
-    //brain brain = new brain();
+    //ArrayList<Move> movesL = new ArrayList<>();
+    //Brain brain = new Brain();
 
     public static void main(String[] args) {
         Main app = new Main();
@@ -163,18 +163,28 @@ public class Main {
     public void run() {
         
         while (true) {
-            movesL = brain.allLegalMoves(game);
-            float evaluation = minimax(game, 2, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY);
+            //Brain.printBitboard(game.getBoard().getBitboard(PieceType.KNIGHT, true));
+            //System.out.println(Brain.allLegalMoves(game));
+            //Brain.printBitboard(game.getBoard().getBitboard(PieceType.KNIGHT, true));
+            float evaluation = minimax(game, 1, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY);
             System.out.println("Evaluation of the starting position: " + evaluation);
-            String userInput = input.nextLine();
-            int from = fromAlgebraic(userInput.substring(0, 2));
-            int to = fromAlgebraic(userInput.substring(2, 4));
-            Move move = pickMove(from, to);
-            if (move != null) {
-                brain.makeMove(move, game);
-                System.out.println("Move made: " + move.toAlgebraic(move));
-            } else {
-                System.out.println("Invalid move.");
+            Move move = null;
+            while (move == null){
+                String userInput = input.nextLine();
+                int from = fromAlgebraic(userInput.substring(0, 2));
+                int to = fromAlgebraic(userInput.substring(2, 4));
+                move = pickMove(from, to);
+                
+                if (move != null) {
+                    Brain.makeMove(move, game);
+                    System.out.println("Move made: " + move.toAlgebraic(move));
+                    game.getBoard().printBoard(board);
+                } else {
+                    System.out.println("Invalid move. Valid moves are: ");
+                    //Brain.allLegalMoves(game);
+                    System.out.println(Brain.getMoves());
+                    game.getBoard().printBoard(board);
+                }
             }
         }        
     }
@@ -184,7 +194,7 @@ public class Main {
         return rank * 8 + file;
     }
     public Move pickMove(int from, int to){
-        for (Move move : movesL){
+        for (Move move : Brain.getMoves()){
             if (move.from == from && move.to == to){
                 return move;
             }
@@ -194,8 +204,8 @@ public class Main {
 
     public float evaluate(Game position){
         float score = 0.0f;
-        if (brain.isGameOver(position, brain.allPseudoLegalMovesBitBoard(position, false))){
-            return brain.gameEnd(position, brain.allPseudoLegalMovesBitBoard(position, false));
+        if (Brain.isGameOver(position, Brain.allPseudoLegalMovesBitBoard(position, false))){
+            return Brain.gameEnd(position, Brain.allPseudoLegalMovesBitBoard(position, false));
         }
         Board board = position.getBoard();
         score += materialScore(board);
@@ -306,37 +316,62 @@ public class Main {
     }
 
     public float minimax(Game position, int depth, float alpha, float beta){
-        movesL = brain.allLegalMoves(position);
-        if (depth == 0 || brain.isGameOver(position, depth)){
+
+        ArrayList<Move> movesL = new ArrayList<>(Brain.allLegalMoves(position));
+        //System.out.println(Brain.getMoves());
+
+
+        if (Brain.isGameOver(position, Brain.allPseudoLegalMovesBitBoard(position, false))){
+            position.changeTurn();
+            //System.out.println("game over");
+            //System.out.println("Checkmate " + Brain.checkmate(Brain.allPseudoLegalMovesBitBoard(position, false), position));
+            //Brain.printBitboard(position.getBoard().getBitboard(PieceType.QUEEN, true));
+        }
+        
+        if (depth == 0){ //  || Brain.isGameOver(position, depth)
+            //System.out.println(evaluate(position) + " " + position.isWhiteToMove());
+            //game.getBoard().printBoard(board);
+            position.changeTurn();
             return evaluate(position);
         }
+
+        //Brain.printBitboard(position.getBoard().getBitboard(PieceType.PAWN, true));
         if (position.isWhiteToMove()){
             float maxEval = Float.NEGATIVE_INFINITY;
             for (Move move : movesL){
-                System.out.println("Evaluating move: " + move.toAlgebraic(move));
-                brain.makeMove(move, position);
+                //System.out.println("Evaluating move: " + move.toAlgebraic(move) + " for white at depth " + depth);
+                Brain.makeMove(move, position);
+                position.changeTurn();
+                //game.getBoard().printBoard(board);
                 float eval = minimax(position, depth - 1, alpha, beta);
                 maxEval = Math.max(maxEval, eval);
                 alpha = Math.max(alpha, eval);
-                brain.unMove(move, position);
+                //System.out.println("Undoing " + move);
+                Brain.unMove(move, position);
+                //position.changeTurn();
+                //game.getBoard().printBoard(board);
                 if (beta <= alpha){
                     break;
                 }
             }
+            position.changeTurn();
             return maxEval;
         } else {
             float minEval = Float.POSITIVE_INFINITY;
             for (Move move : movesL){
-                System.out.println("Evaluating move: " + move.toAlgebraic(move));
-                brain.makeMove(move, position);
+                //System.out.println("Evaluating move: " + move.toAlgebraic(move) + " for black at depth " + depth);
+                Brain.makeMove(move, position);
+                position.changeTurn();
                 float eval = minimax(position, depth - 1, alpha, beta);
                 minEval = Math.min(minEval, eval);
                 beta = Math.min(beta, eval);
-                brain.unMove(move, position);
+                //System.out.println("Undoing " + move);
+                Brain.unMove(move, position);
                 if (beta <= alpha){
                     break;
                 }
             }
+            position.changeTurn();
             return minEval;
         }
     }
