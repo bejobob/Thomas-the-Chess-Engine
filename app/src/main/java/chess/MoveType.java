@@ -2,7 +2,7 @@
  * MoveType
  * An ENUM to help identify what type of move a move is
  * @author Benjamin Kealey
- * @version 2026/07/30
+ * @version 2026/09/02 - Rework branch
  */
 
 package chess;

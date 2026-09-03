@@ -2,7 +2,7 @@
  * Board
  * Represents a chess board with all the pieces on it. Can also calculate how much material each player has left.
  * @author Benjamin Kealey
- * @version 2026/08/26
+ * @version 2026/09/02 - Rework branch
  */
 
 package chess;
@@ -28,84 +28,90 @@ public class Board {
     public boolean bO_O = true;
     public boolean bO_O_O = true;
 
-    public Board(long whitePawns, long whiteRooks, long whiteKnights, long whiteBishops, long whiteQueens, long whiteKing,
-                 long blackPawns, long blackRooks, long blackKnights, long blackBishops, long blackQueens, long blackKing) {
+    public Board(long whitePawns, long whiteKnights, long whiteBishops, long whiteRooks, long whiteQueens, long whiteKing,
+                 long blackPawns, long blackKnights, long blackBishops, long blackRooks, long blackQueens, long blackKing) {
+
         this.whitePawns = whitePawns;
-        this.whiteRooks = whiteRooks;
         this.whiteKnights = whiteKnights;
         this.whiteBishops = whiteBishops;
+        this.whiteRooks = whiteRooks;
         this.whiteQueens = whiteQueens;
         this.whiteKing = whiteKing;
+
         this.blackPawns = blackPawns;
-        this.blackRooks = blackRooks;
         this.blackKnights = blackKnights;
         this.blackBishops = blackBishops;
+        this.blackRooks = blackRooks;
         this.blackQueens = blackQueens;
         this.blackKing = blackKing;
-        whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
-        blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
+
+        whitePieces = whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueens | whiteKing;
+        blackPieces = blackPawns | blackKnights | blackBishops | blackRooks | blackQueens | blackKing;
     }
 
-    public long getBitboard(PieceType pieceType, boolean white){
-        if (pieceType.equals(PieceType.PAWN)){
-            return white? whitePawns : blackPawns;
-        } else if (pieceType.equals(PieceType.KNIGHT)){
-            return white? whiteKnights : blackKnights;
-        } else if (pieceType.equals(PieceType.BISHOP)){
-            return white? whiteBishops : blackBishops;
-        } else if (pieceType.equals(PieceType.ROOK)){
-            return white? whiteRooks : blackRooks;
-        } else if (pieceType.equals(PieceType.QUEEN)){
-            return white? whiteQueens : blackQueens;
-        } else if (pieceType.equals(PieceType.KING)) {
-            return white? whiteKing : blackKing;
-        }
-        return 0L;
-    }
-
-    public void setBitboard(PieceType pieceType, Long val, boolean white){
+    public long getBitBoard(PieceType pieceType, boolean white) {
         switch (pieceType) {
             case PAWN:
-                if (white){whitePawns = val;} else {blackPawns = val;}
+                return white ? whitePawns : blackPawns;
+            case KNIGHT:
+                return white ? whiteKnights : blackKnights;
+            case BISHOP:
+                return white ? whiteBishops : blackBishops;
+            case ROOK:
+                return white ? whiteRooks : blackRooks;
+            case QUEEN:
+                return white ? whiteQueens : blackQueens;
+            case KING:
+                return white ? whiteKing : blackKing;
+            default:
+                throw new IllegalArgumentException("Invalid piece type");
+        }
+    }
+
+    public void setBitBoard(PieceType pieceType, boolean white, long bitBoard){
+        switch(pieceType) {
+            case PAWN:
+                if (white){whitePawns = bitBoard;} else {blackPawns = bitBoard;}
                 break;
             case KNIGHT:
-                if (white){whiteKnights = val;} else {blackKnights = val;}
+                if (white){whiteKnights = bitBoard;} else {blackKnights = bitBoard;}
                 break;
             case BISHOP:
-                if (white){whiteBishops = val;} else {blackBishops = val;}
+                if (white){whiteBishops = bitBoard;} else {blackBishops = bitBoard;}
                 break;
             case ROOK:
-                if (white){whiteRooks = val;} else {blackRooks = val;}
+                if (white){whiteRooks = bitBoard;} else {blackRooks = bitBoard;}
                 break;
             case QUEEN:
-                if (white){whiteQueens = val;} else {blackQueens = val;}
+                if (white){whiteQueens = bitBoard;} else {blackQueens = bitBoard;}
                 break;
             case KING:
-                if (white){whiteKing = val;} else {blackKing = val;}
+                if (white){whiteKing = bitBoard;} else {blackKing = bitBoard;}
                 break;
             default:
                 break;
         }
-        
-        whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
-        blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
+        whitePieces = whitePawns | whiteKnights | whiteBishops | whiteRooks | whiteQueens | whiteKing;
+        blackPieces = blackPawns | blackKnights | blackBishops | blackRooks | blackQueens | blackKing;
     }
 
-    public boolean equals(Board otherBoard){
-        if (this.whitePawns != otherBoard.whitePawns) return false;
-        if (this.blackPawns != otherBoard.whitePawns) return false;
-        if (this.whiteKnights != otherBoard.whiteKnights) return false;
-        if (this.blackKnights != otherBoard.whiteKnights) return false;
-        if (this.whiteBishops != otherBoard.whiteBishops) return false;
-        if (this.blackBishops != otherBoard.blackBishops) return false;
-        if (this.whiteRooks != otherBoard.whiteRooks) return false;
-        if (this.blackRooks != otherBoard.blackRooks) return false;
-        if (this.whiteQueens != otherBoard.whiteQueens) return false;
-        if (this.blackQueens != otherBoard.whiteQueens) return false;
-        if (this.whiteKing != otherBoard.whiteKing) return false;
-        if (this.blackKing != otherBoard.blackKing) return false;
+    public PieceType getPieceOnSquare(int square){
 
-        return true;
+        if (((1L << square) & (whitePawns | blackPawns)) != 0){
+            return PieceType.PAWN;
+        } else if (((1L << square) & (whiteKnights | blackKnights)) != 0) {
+            return PieceType.KNIGHT;
+        } else if (((1L << square) & (whiteBishops | whiteBishops)) != 0) {
+            return PieceType.BISHOP;
+        } else if (((1L << square) & (whiteRooks | blackRooks)) != 0) {
+            return PieceType.ROOK;
+        } else if (((1L << square) & (whiteQueens | blackQueens)) != 0) {
+            return PieceType.QUEEN;
+        } else if (((1L << square) & (whiteKing | blackKing)) != 0) {
+            return PieceType.KING;
+        } else {
+            return null;
+        }
     }
 
     public void printBoard(Board board) {
