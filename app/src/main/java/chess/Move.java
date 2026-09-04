@@ -6,6 +6,7 @@
  */
 
 package chess;
+import java.util.ArrayList;
 
 public class Move {
     int from;
@@ -18,9 +19,10 @@ public class Move {
     int captureOn;
     PieceType pieceType;
     PieceType captureType;
-    PieceType promotion;
+    PieceType promotionType;
 
     /**
+     * A constructor for a NORMAL MOVE
      * @param from the starting square
      * @param to the target square
      * @param pieceType the type of piece that is moving
@@ -39,7 +41,17 @@ public class Move {
         this.white = white;
         this.breaksCastle = breaksCastle;
     }
-
+    /**
+     * A constructor for a NORMAL CAPTURE
+     * @param moveType
+     * @param from
+     * @param to
+     * @param captureOn
+     * @param pieceType
+     * @param captureType
+     * @param white
+     * @param breaksCastle
+     */
     public Move(MoveType moveType, int from, int to, int captureOn, PieceType pieceType, PieceType captureType, boolean white, boolean breaksCastle){
         this.moveType = moveType;
         this.from = from;
@@ -50,6 +62,60 @@ public class Move {
         this.white = white;
         this.breaksCastle = breaksCastle;
     }
+    /**
+     * A constructor for a NORMAL PROMOTION
+     * @param moveType
+     * @param from
+     * @param to
+     * @param promotion
+     * @param white
+     */
+    public Move(int from, int to, PieceType promotion, boolean white){
+        pieceType = PieceType.PAWN;
+        moveType = MoveType.PROMOTION;
+        this.from = from;
+        this.to = to;
+        this.promotionType = promotion;
+        this.white = white;
+        breaksCastle = false;
+    }
+
+    /**
+     * A constructor for a CAPTURE PROMOTION
+     * @param from
+     * @param to
+     * @param promotion
+     * @param captureType
+     * @param white
+     */
+    public Move(int from, int to, PieceType promotion, PieceType captureType, boolean white){
+        pieceType = PieceType.PAWN;
+        moveType = MoveType.CAPTURE_PROMOTION;
+        this.from = from;
+        this.to = to;
+        this.promotionType = promotion;
+        this.captureType = captureType;
+        this.white = white;
+        breaksCastle = false;
+    }
+
+    public static ArrayList<Move> promotion(int from, int to, boolean white){
+        ArrayList<Move> toReturn = new ArrayList<>();
+        for (PieceType pieceType : PieceType.values()){
+            if (pieceType == PieceType.PAWN || pieceType == PieceType.KING) continue;
+            toReturn.add(new Move(from, to, pieceType, white));
+        }
+        return toReturn;
+    }
+
+    public static ArrayList<Move> capturePromotion(int from, int to, PieceType captureType, boolean white){
+        ArrayList<Move> toReturn =  new ArrayList<>();
+        for (PieceType pieceType : PieceType.values()){
+            if (pieceType == PieceType.PAWN || pieceType == PieceType.KING) continue;
+            toReturn.add(new Move(from, to, pieceType, captureType, white));
+        }
+        return toReturn;
+    }
 
     @Override
     public String toString(){
@@ -57,6 +123,7 @@ public class Move {
         int rankFrom = from/8+1;
         char fileTo = (char) ('a' + to%8);
         int rankTo = to/8 + 1;
-        return pieceType.toString() + fileFrom + rankFrom + ((this.moveType == MoveType.CAPTURE)?" takes " : " to ") + fileTo + rankTo; //
+        String promotion = " =" + ((promotionType != null)? promotionType.symbol() : "\0");
+        return pieceType.toString() + fileFrom + rankFrom + ((captureType != null)?" takes " : " to ") + fileTo + rankTo + promotion; //
     }
 }
