@@ -12,13 +12,14 @@ import java.util.HashMap;
 import java.util.ArrayList;
 
 public class Game {
-    private ArrayList<Move> selectedMoves;
+    private ArrayList<Move> playedMoves;
     private Map<Board, Integer> positions;
     private Board board;
     private boolean whiteToMove = true;
 
     public Game(Board board) {
         this.board = board;
+        playedMoves = new ArrayList<>();
     }
 
     public boolean getTurn(){
@@ -31,5 +32,13 @@ public class Game {
 
     public void changeTurn(){
         whiteToMove = !whiteToMove;
+    }
+
+    public Move getLastMove(){
+        if (playedMoves != null && !playedMoves.isEmpty()){
+            return playedMoves.get(playedMoves.size() - 1);
+        } else {
+            return null;
+        }
     }
 }

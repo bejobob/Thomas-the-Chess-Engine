@@ -13,8 +13,7 @@ public class Brain {
 
     private static ArrayList<Move> pseudoLegalMoves = new ArrayList<>();
     private static ArrayList<Move> legalMoves = new ArrayList<>();
-    private static Board board = new Board(0x0001000000000000L, 0L, 0L, 0L, 0L, 0L, 0L, 0l, 0L, 0x0200000000000000L, 0x0100000000000000L, 0L);
-    private static Game game = new Game(board);
+    //private static Game game = new Game(board);
 
     /**
      * Identifies all the pseudo-legal moves for all the pieces of the current player with the exception of pawns.
@@ -67,9 +66,10 @@ public class Brain {
         int forward = white? 8 : -8;
         int captureRight = white? 9 : -7;
         int captureLeft = white? 7 : -9;
+        //int braveRank = white? 4:3;
+        //int cowardRank = white? 3:4;
         int square;
         long otherPieces = white? game.getBoard().blackPieces : game.getBoard().whitePieces; // the pieces of the opposite colour
-        long pieces = white? game.getBoard().whitePieces : game.getBoard().blackPieces; // the pieces of the same colour
         while (pawns != 0){
             square = Long.numberOfTrailingZeros(pawns);
             if (board.getPieceOnSquare(square+forward) == null){ // if there is no piece directly in front of the pawn
@@ -94,8 +94,25 @@ public class Brain {
                     toReturn.addAll(Move.capturePromotion(square, square+captureLeft, board.getPieceOnSquare(square+captureLeft), white));
                 } else {
                     toReturn.add(new Move(MoveType.CAPTURE, square, square+captureLeft, square+captureLeft, PieceType.PAWN, board.getPieceOnSquare(square+captureLeft), white, false));
-                }            
-            }          
+                }
+            }
+            if (game.getLastMove() != null){ // is this isn't the first move
+            //System.out.println("Last move exists ... check");
+                Move lastMove = game.getLastMove();
+                if (lastMove.pieceType == PieceType.PAWN){ // if the last move was a pawn move
+                    //System.out.println("Last move is pawn move ... check");
+                    if (Math.abs(lastMove.from - lastMove.to) == 16){ // if the last move was a double pawn move and the last move was from the starting rank
+                        //System.out.println("Last move from correct rank ... check");
+                        if (lastMove.from/8 == (lastMove.white? 1:6)){
+                            //System.out.println("Last move to correct rank ... check");
+                            if (Math.abs((lastMove.to%8) - (square%8))==1){ // if the last move put the pawn on a square right beside the current pawn
+                                toReturn.add(new Move(MoveType.CAPTURE, square, lastMove.to + forward, lastMove.to, PieceType.PAWN, PieceType.PAWN, white, false));
+                                //System.out.println("Move added ... check");
+                            }
+                        }
+                    }
+                }
+            }
             pawns &= ~(1L<<square);  
         }
         return toReturn;
@@ -118,14 +135,14 @@ public class Brain {
      * @return true if the current player is in check in the passed position, false otherwise
      */
 
-    public static ArrayList<Move> getLegalMoves(){
+    public static ArrayList<Move> getLegalMoves(Game game){
         ArrayList<Move> toReturn = new ArrayList<>();
         pseudoLegalMoves = masterMoves(game);
         pseudoLegalMoves.addAll(pawnMoves(game));
         //System.out.println(pseudoLegalMoves.size());
         for (Move move : pseudoLegalMoves){
             makeMove(move, game);
-            board.printBoard(board);
+            //board.printBoard(board);
 
             if ((getOtherMoves(game) & (game.getBoard().getBitBoard(PieceType.KING, move.white))) == 0){
                 toReturn.add(move);
@@ -135,21 +152,22 @@ public class Brain {
             unMove(move, game);
         }
         for (Move move : toReturn){
-            System.out.println(move);
+            //System.out.println(move);
         }
         return toReturn;
     }
 
     public static void makeMove(Move move, Game game){
-        Board board = game.getBoard();
-        long pieces = board.getBitBoard(move.pieceType, game.getTurn());
+        Board board = game.getBoard(); // the current board
+        long pieces = board.getBitBoard(move.pieceType, move.white); // the bitboard representing the pieces of which one shall be moved
         long capturedPieces;
-        long promotionPieces = (move.promotionType == null)? null : board.getBitBoard(move.promotionType, game.getTurn());
+        long promotionPieces = (move.promotionType == null)? 0L : board.getBitBoard(move.promotionType, move.white);
         if (move.moveType == MoveType.MOVE){
             pieces &= ~(1L << move.from);
             pieces |= 1L << move.to;
             board.setBitBoard(move.pieceType, move.white, pieces);
         } else if (move.moveType == MoveType.CAPTURE){
+            //System.out.println(move.pieceType);
             capturedPieces = board.getBitBoard(move.captureType, !move.white);
             pieces &= ~(1L << move.from);
             pieces |= 1L << move.to;
@@ -162,7 +180,7 @@ public class Brain {
             board.setBitBoard(PieceType.PAWN, move.white, pieces);
             board.setBitBoard(move.promotionType, move.white, promotionPieces);
         } else if (move.moveType == MoveType.CAPTURE_PROMOTION){
-            System.out.println("test");
+            //System.out.println("test");
             capturedPieces = board.getBitBoard(move.captureType, !move.white);
             pieces &= ~(1L << move.from);
             promotionPieces |= 1L << move.to;
@@ -175,15 +193,15 @@ public class Brain {
 
     public static void unMove(Move move, Game game){
         Board board = game.getBoard();
-        long pieces = board.getBitBoard(move.pieceType, game.getTurn());
+        long pieces = board.getBitBoard(move.pieceType, move.white);
         long capturedPieces;
-        long promotionPieces = (move.promotionType == null)? null : board.getBitBoard(move.promotionType, game.getTurn());
+        long promotionPieces = (move.promotionType == null)? 0L : board.getBitBoard(move.promotionType, move.white);
         if (move.moveType == MoveType.MOVE){
             pieces &= ~(1L << move.to);
             pieces |= 1L << move.from;
-            game.getBoard().setBitBoard(move.pieceType, game.getTurn(), pieces);
+            game.getBoard().setBitBoard(move.pieceType, move.white, pieces);
         } else if (move.moveType == MoveType.CAPTURE){
-            capturedPieces = board.getBitBoard(board.getPieceOnSquare(move.captureOn), !move.white);
+            capturedPieces = board.getBitBoard(move.captureType, !move.white);
             pieces &= ~(1L << move.to);
             pieces |= 1L << move.from;
             capturedPieces |= 1L << move.captureOn;

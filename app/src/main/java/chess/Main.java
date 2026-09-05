@@ -17,11 +17,6 @@ import java.util.ArrayList;
 
 public class Main {
 
-    int BASE_PAWN_VALUE = 1;
-    int BASE_KNIGHT_VALUE = 3;
-    int BASE_BISHOP_VALUE = 3;
-    int BASE_ROOK_VALUE = 5;
-    int BASE_QUEEN_VALUE = 9;
     long whitePawns = 0x000000000000FF00L; // starting position
     long whiteRooks = 0x0000000000000081L; // starting position
     long whiteKnights = 0x0000000000000042L; // starting position
@@ -30,8 +25,7 @@ public class Main {
     long whiteKing = 0x0000000000000010L; // starting position
     long whitePieces = whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKing;
 
-    long blackPawns = 0L;
-    //long blackPawns = 0x00FF000000000000L; // starting position
+    long blackPawns = 0x00FF000000000000L; // starting position
     long blackRooks = 0x8100000000000000L; // starting position
     long blackKnights = 0x4200000000000000L; // starting position
     long blackBishops = 0x2400000000000000L; // starting position
@@ -39,117 +33,8 @@ public class Main {
     long blackKing = 0x1000000000000000L; // starting position
     long blackPieces = blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKing;
 
-
-    float[] pawnTable = {
-        0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,
-
-        0.05f,  0.10f,  0.10f, -0.05f, -0.05f,  0.10f,  0.10f,  0.05f,
-
-        0.05f,  0.05f,  0.10f,  0.20f,  0.20f,  0.10f,  0.05f,  0.05f,
-
-        0.00f,  0.00f,  0.10f,  0.25f,  0.25f,  0.10f,  0.00f,  0.00f,
-
-        0.00f,  0.00f,  0.05f,  0.20f,  0.20f,  0.05f,  0.00f,  0.00f,
-
-        0.05f, -0.05f, -0.10f,  0.00f,  0.00f, -0.10f, -0.05f,  0.05f,
-
-        0.05f,  0.05f,  0.05f, -0.10f, -0.10f,  0.05f,  0.05f,  0.05f,
-
-        0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f,  0.00f
-    };
-
-    float[] knightTable = {
-        -0.5f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.5f,
-
-        -0.4f, -0.2f,  0.0f,  0.0f,  0.0f,  0.0f, -0.2f, -0.4f,
-
-        -0.4f,  0.0f,  0.10f, 0.2f,  0.2f,  0.10f, 0.0f, -0.4f,
-
-        -0.4f,  0.0f,  0.2f,  0.25f, 0.25f, 0.2f,  0.0f, -0.4f,
-
-        -0.4f,  0.0f,  0.2f,  0.25f, 0.25f, 0.2f,  0.0f, -0.4f,
-
-        -0.4f,  0.0f,  0.10f, 0.2f,  0.2f,  0.10f, 0.0f, -0.4f,
-
-        -0.4f, -0.2f,  0.0f,  0.0f,  0.0f,  0.0f, -0.2f, -0.4f,
-
-        -0.5f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.4f, -0.5f,
-    };
-
-    float[] bishopTable = {
-        -0.2f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.2f,
-
-        -0.1f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f, -0.1f,
-
-        -0.1f,  0.0f,  0.10f, 0.15f, 0.15f, 0.10f, 0.0f, -0.1f,
-
-        -0.1f,  0.05f, 0.10f, 0.20f, 0.20f, 0.10f, 0.05f, -0.1f,
-
-        -0.1f,  0.05f, 0.10f, 0.20f, 0.20f, 0.10f, 0.05f, -0.1f,
-
-        -0.1f,  0.0f,  0.10f, 0.15f, 0.15f, 0.10f, 0.0f, -0.1f,
-
-        -0.1f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f,  0.0f, -0.1f,
-
-        -0.2f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.1f, -0.2f
-    };
-
-    float[] rookTable = {
-        0.00f,  0.00f,  0.00f,  0.05f,  0.05f,  0.00f,  0.00f,  0.00f,
-
-        0.00f,  0.00f,  0.00f,  0.05f,  0.05f,  0.00f,  0.00f,  0.00f,
-
-        0.00f,  0.00f,  0.00f,  0.05f,  0.05f,  0.00f,  0.00f,  0.00f,
-
-        0.05f,  0.05f,  0.05f,  0.10f,  0.10f,  0.05f,  0.05f,  0.05f,
-
-        0.05f,  0.05f,  0.05f,  0.10f,  0.10f,  0.05f,  0.05f,  0.05f,
-
-        0.00f,  0.00f,  0.00f,  0.05f,  0.05f,  0.00f,  0.00f,  0.00f,
-
-        0.10f,  0.10f,  0.10f,  0.15f,  0.15f,  0.10f,  0.10f,  0.10f,
-
-        0.00f,  0.00f,  0.00f,  0.05f,  0.05f,  0.00f,  0.00f,  0.00f
-    };
-
-    float[] queenTable = {
-        -0.2f, -0.1f, -0.1f,  0.0f,  0.0f, -0.1f, -0.1f, -0.2f,
-
-        -0.1f,  0.0f,  0.05f, 0.05f, 0.05f, 0.05f,  0.0f, -0.1f,
-
-        -0.1f,  0.05f, 0.10f, 0.10f, 0.10f, 0.10f, 0.05f, -0.1f,
-
-        0.0f,  0.05f, 0.10f, 0.15f, 0.15f, 0.10f, 0.05f,  0.0f,
-
-        0.0f,  0.05f, 0.10f, 0.15f, 0.15f, 0.10f, 0.05f,  0.0f,
-
-        -0.1f,  0.05f, 0.10f, 0.10f, 0.10f, 0.10f, 0.05f, -0.1f,
-
-        -0.1f,  0.0f,  0.05f, 0.05f, 0.05f, 0.05f,  0.0f, -0.1f,
-
-        -0.2f, -0.1f, -0.1f,  0.0f,  0.0f, -0.1f, -0.1f, -0.2f
-    };
-
-    float[] kingTable = {
-        0.20f,  0.30f,  0.10f,  0.00f,  0.00f,  0.10f,  0.30f,  0.20f,
-
-        0.20f,  0.20f,  0.00f,  0.00f,  0.00f,  0.00f,  0.20f,  0.20f,
-
-        0.10f,  0.00f, -0.10f, -0.20f, -0.20f, -0.10f,  0.00f,  0.10f,
-
-        0.00f,  0.00f, -0.20f, -0.30f, -0.30f, -0.20f,  0.00f,  0.00f,
-
-        0.00f,  0.00f, -0.20f, -0.30f, -0.30f, -0.20f,  0.00f,  0.00f,
-
-        0.10f,  0.00f, -0.10f, -0.20f, -0.20f, -0.10f,  0.00f,  0.10f,
-
-        0.20f,  0.20f,  0.00f,  0.00f,  0.00f,  0.00f,  0.20f,  0.20f,
-
-        0.20f,  0.30f,  0.10f,  0.00f,  0.00f,  0.10f,  0.30f,  0.20f
-    };
-
-    Board board = new Board(whitePawns, whiteRooks, whiteKnights, whiteBishops, whiteQueens, whiteKing,
-            blackPawns, blackRooks, blackKnights, blackBishops, blackQueens, blackKing);
+    Board board = new Board(whitePawns, whiteKnights, whiteBishops, whiteRooks, whiteQueens, whiteKing,
+            blackPawns, blackKnights, blackBishops, blackRooks, blackQueens, blackKing);
     Game game = new Game(board);
     Scanner input = new Scanner(System.in);
     //ArrayList<Move> movesL = new ArrayList<>();
@@ -161,6 +46,88 @@ public class Main {
     }
 
     public void run() {
-        Brain.getLegalMoves();
+        while (true){
+            System.out.println(alphaBeta(game, 4, Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY));
+            board.printBoard(board);
+            System.out.println(game.getTurn());
+            String userInput = input.nextLine();
+            int from = fromAlgebraic(userInput.substring(0, 2));
+            int to = fromAlgebraic(userInput.substring(2, 4));
+            Move toPlay = pickMove(from, to);
+            Brain.makeMove(toPlay, game);
+            game.changeTurn();
+        }
+    }
+    public int fromAlgebraic(String move){
+        int file = move.charAt(0) - 'a';
+        int rank = move.charAt(1) - '1';
+        return rank * 8 + file;
+    }
+
+    public Move pickMove(int from, int to){
+        for (Move move : Brain.getLegalMoves(game)){
+            if (move.from == from && move.to == to){
+                return move;
+            }
+        }
+        return null;
+    }
+
+    public float staticEvaluation(Board board){
+        float score = 0;
+        for (int i = 0; i <= 1; i++){
+            for (PieceType pieceType : PieceType.values()){
+                long pieces = board.getBitBoard(pieceType, (i == 0)? true : false);
+                score += Long.bitCount(pieces)* pieceType.baseValue() * ((i==0)? 1 : -1);
+
+                while (pieces != 0){
+                    int square = Long.numberOfTrailingZeros(pieces);
+                    score += pieceType.getTable()[square] * ((i==0)? 1 : -1);
+                    pieces &= pieces - 1;
+                }
+            }
+        }
+        return score;
+    }
+
+    public float alphaBeta(Game game, int depth, float alpha, float beta){
+        if (depth == 0){ // or if game is over
+            return staticEvaluation(game.getBoard());
+        }
+        if (game.getTurn()){
+            float maxEval = Float.NEGATIVE_INFINITY;
+            for (Move move : Brain.getLegalMoves(game)){
+                System.out.println("White to move: " + (4 - (depth-1)) + move);
+                //board.printBoard(board);
+                Brain.makeMove(move, game);
+                game.changeTurn();
+                float eval = alphaBeta(game, depth-1, alpha, beta);
+                Brain.unMove(move, game);
+                game.changeTurn();
+                maxEval = Math.max(maxEval, eval);
+                alpha = Math.max(alpha, eval);
+                if (beta <= alpha){
+                    break;
+                }
+            }
+            return maxEval;
+        } else {
+            float minEval = Float.POSITIVE_INFINITY;
+            for (Move move : Brain.getLegalMoves(game)){
+                //System.out.println("Black: " + (4 - (depth-1)) + " " + move);
+                //board.printBoard(board);
+                Brain.makeMove(move, game);
+                game.changeTurn();
+                float eval = alphaBeta(game, depth-1, alpha, beta);
+                Brain.unMove(move, game);
+                game.changeTurn();
+                minEval = Math.min(minEval, eval);
+                beta = Math.min(beta, eval);
+                if (beta <= alpha){
+                    break;
+                }
+            }
+            return minEval;
+        }
     }
 }

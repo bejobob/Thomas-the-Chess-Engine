@@ -123,7 +123,7 @@ public class Move {
         int rankFrom = from/8+1;
         char fileTo = (char) ('a' + to%8);
         int rankTo = to/8 + 1;
-        String promotion = " =" + ((promotionType != null)? promotionType.symbol() : "\0");
+        String promotion =  ((promotionType != null)? (" ="+promotionType.symbol()) : "\0");
         return pieceType.toString() + fileFrom + rankFrom + ((captureType != null)?" takes " : " to ") + fileTo + rankTo + promotion; //
     }
 }
